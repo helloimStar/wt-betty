@@ -169,4 +169,22 @@
   <data name="Running90s" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Running90s.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="RITA_AngleOfAttackOverLimit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RITA-AngleOfAttackOverLimit.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RITA_Bingo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RITA-Bingo.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RITA_GOverLimit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RITA-GOverLimit.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RITA_MaximumSpeed" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RITA-MaximumSpeed.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RITA_PullUp" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RITA-PullUp.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RITA_WarningWarning" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RITA-WarningWarning.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

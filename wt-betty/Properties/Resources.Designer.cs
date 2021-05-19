@@ -179,6 +179,36 @@ namespace wt_betty.Properties {
         
         /// <summary>
         ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        internal static System.IO.UnmanagedMemoryStream RITA_AngleOfAttackOverLimit {
+            get {
+                return ResourceManager.GetStream("RITA_AngleOfAttackOverLimit", resourceCulture);
+            }
+        }
+        internal static System.IO.UnmanagedMemoryStream RITA_Bingo {
+            get {
+                return ResourceManager.GetStream("RITA_Bingo", resourceCulture);
+            }
+        }
+        internal static System.IO.UnmanagedMemoryStream RITA_GOverLimit {
+            get {
+                return ResourceManager.GetStream("RITA_GOverLimit", resourceCulture);
+            }
+        }
+        internal static System.IO.UnmanagedMemoryStream RITA_MaximumSpeed {
+            get {
+                return ResourceManager.GetStream("RITA_MaximumSpeed", resourceCulture);
+            }
+        }
+        internal static System.IO.UnmanagedMemoryStream RITA_PullUp {
+            get {
+                return ResourceManager.GetStream("RITA_PullUp", resourceCulture);
+            }
+        }
+        internal static System.IO.UnmanagedMemoryStream RITA_WarningWarning {
+            get {
+                return ResourceManager.GetStream("RITA_WarningWarning", resourceCulture);
+            }
+        }
         /// </summary>
         internal static System.IO.UnmanagedMemoryStream Running90s {
             get {

@@ -50,6 +50,15 @@ namespace wt_betty
             tbx_gearDown.Text = User.Default.GearDown.ToString();
             tbx_gearUp.Text = User.Default.GearUp.ToString();
 
+            var voiceTemplate = Entities.VoiceTemplate.US_Betty;
+            if (Enum.IsDefined(typeof(Entities.VoiceTemplate), User.Default.VoiceTemplate))
+                voiceTemplate = (Entities.VoiceTemplate)User.Default.VoiceTemplate;
+            else
+                voiceTemplate = Entities.VoiceTemplate.US_Betty;
+
+            rb_betty.IsChecked = voiceTemplate == Entities.VoiceTemplate.US_Betty;
+            rb_rita.IsChecked = voiceTemplate == Entities.VoiceTemplate.RU_Rita;
+
             dispatcherTimer1.Tick += new EventHandler(dispatcherTimer1_Tick);
             dispatcherTimer1.Interval = new TimeSpan(0, 0, 0, 0, 200);
             dispatcherTimer2.Tick += new EventHandler(dispatcherTimer2_Tick);
@@ -190,12 +199,18 @@ namespace wt_betty
                     decimal AoS = Convert.ToDecimal(myState.AoS, culture);
                     int TAS = Convert.ToInt32(myState.TAS, culture);
                     label.Content = myIndicator.type;
+                    
+                    var voiceTemplate = Entities.VoiceTemplate.US_Betty;
+                    if (Enum.IsDefined(typeof(Entities.VoiceTemplate), User.Default.VoiceTemplate))
+                        voiceTemplate = (Entities.VoiceTemplate)User.Default.VoiceTemplate;
+                    else
+                        voiceTemplate = Entities.VoiceTemplate.US_Betty;
 
                     //BINGO FUEL
                     if (cbx_fuel.IsChecked == true &&  Fuel / FuelFull < 103 && Fuel / FuelFull > 100 && Throttle > 0)
                     {
                         System.Media.SoundPlayer myPlayer;
-                        myPlayer = new System.Media.SoundPlayer(Properties.Resources.Bingo);
+                        myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_Bingo : Properties.Resources.Bingo);
                         myPlayer.PlaySync();
                     }
 
@@ -204,8 +219,8 @@ namespace wt_betty
                     {   //Stall Warning Mandatory pre-definitnions
                         System.Media.SoundPlayer stall1;
                         System.Media.SoundPlayer stall2;
-                        stall1 = new System.Media.SoundPlayer(Properties.Resources.AngleOfAttackOverLimit);
-                        stall2 = new System.Media.SoundPlayer(Properties.Resources.MaximumAngleOfAttack);
+                        stall1 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_AngleOfAttackOverLimit : Properties.Resources.AngleOfAttackOverLimit);
+                        stall2 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_AngleOfAttackOverLimit : Properties.Resources.MaximumAngleOfAttack);
 
                         if (AoA > Convert.ToDecimal(User.Default.AoA * 0.8) && AoA < User.Default.AoA + 10 && (myIndicator.gears_lamp == "1" || IAS > 100))
                         {
@@ -229,8 +244,8 @@ namespace wt_betty
                     {
                         System.Media.SoundPlayer G1;
                         System.Media.SoundPlayer G2;
-                        G1 = new System.Media.SoundPlayer(Properties.Resources.OverG);
-                        G2 = new System.Media.SoundPlayer(Properties.Resources.GOverLimit);
+                        G1 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_GOverLimit : Properties.Resources.OverG);
+                        G2 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_GOverLimit: Properties.Resources.GOverLimit);
                         if (G > User.Default.GForce || (double)G < -0.4 * User.Default.GForce)
                         {
                             if (G > User.Default.GForce + 3 - User.Default.GForce / (decimal)3)
@@ -251,7 +266,7 @@ namespace wt_betty
                     if (cbx_pullup.IsChecked == true && 0 - Vspeed * (2 + (decimal)Math.Pow(IAS / 100, 0.7)) > Alt)
                     {
                         System.Media.SoundPlayer myPlayer;
-                        myPlayer = new System.Media.SoundPlayer(Properties.Resources.PullUp);
+                        myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_PullUp : Properties.Resources.PullUp);
                         myPlayer.PlaySync();
                     }
 
@@ -259,7 +274,7 @@ namespace wt_betty
                     if (cbx_overSpeed.IsChecked == true && IAS > User.Default.OverSpeed)
                     {
                         System.Media.SoundPlayer myPlayer;
-                        myPlayer = new System.Media.SoundPlayer(Properties.Resources.OverSpeed);
+                        myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_MaximumSpeed : Properties.Resources.OverSpeed);
                         myPlayer.PlaySync();
                     }
 
@@ -269,7 +284,7 @@ namespace wt_betty
                         if (gear == 100 && IAS > User.Default.GearUp && myIndicator.gears_lamp == "0")
                         {
                             System.Media.SoundPlayer myPlayer;
-                            myPlayer = new System.Media.SoundPlayer(Properties.Resources.GearUp);
+                            myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_WarningWarning : Properties.Resources.GearUp);
                             myPlayer.PlaySync();
                         }
 
@@ -282,7 +297,7 @@ namespace wt_betty
                             if (gear == 0 && myIndicator.gears_lamp != "0" && Throttle < 20)
                             {
                                 System.Media.SoundPlayer myPlayer;
-                                myPlayer = new System.Media.SoundPlayer(Properties.Resources.GearDown);
+                                myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_WarningWarning : Properties.Resources.GearDown);
                                 myPlayer.PlaySync();
                             }
                             //Sink rate warning: WT has a global vertical gear speed limit of 10m/s
@@ -374,6 +389,8 @@ namespace wt_betty
                 User.Default.EnableGear = cbx_gear.IsChecked.Value;
                 User.Default.GearDown = Convert.ToInt32(tbx_gearDown.Text);
                 User.Default.GearUp = Convert.ToInt32(tbx_gearUp.Text);
+                User.Default.VoiceTemplate = (int)(rb_rita.IsChecked.Value ? Entities.VoiceTemplate.RU_Rita : Entities.VoiceTemplate.US_Betty);
+                
                 User.Default.Save();
             }
             catch (Exception ex)
@@ -397,6 +414,7 @@ namespace wt_betty
                 User.Default.OverSpeed = 820;
                 User.Default.GearDown = 270;
                 User.Default.GearUp = 290;
+                User.Default.VoiceTemplate = (int) Entities.VoiceTemplate.US_Betty;
                 User.Default.Save();
 
                 cbx_g.IsChecked = User.Default.EnableG;

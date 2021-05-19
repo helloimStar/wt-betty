@@ -201,5 +201,17 @@ namespace wt_betty {
                 this["Setting"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int VoiceTemplate {
+            get {
+                return ((int)(this["VoiceTemplate"]));
+            }
+            set {
+                this["VoiceTemplate"] = value;
+            }
+        }
     }
 }
