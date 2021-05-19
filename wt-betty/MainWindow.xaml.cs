@@ -187,8 +187,8 @@ namespace wt_betty
 
                     Console.Write(myState.AoS);
                     //tbx_msgs.Text = myState.AoS;
-                    decimal AoS = Convert.ToDecimal(myState.AoS);
-                    int TAS = Convert.ToInt32(myState.TAS);
+                    decimal AoS = Convert.ToDecimal(myState.AoS, culture);
+                    int TAS = Convert.ToInt32(myState.TAS, culture);
                     label.Content = myIndicator.type;
 
                     //BINGO FUEL
@@ -207,7 +207,7 @@ namespace wt_betty
                         stall1 = new System.Media.SoundPlayer(Properties.Resources.AngleOfAttackOverLimit);
                         stall2 = new System.Media.SoundPlayer(Properties.Resources.MaximumAngleOfAttack);
 
-                        if (AoA > User.Default.AoA * 0.8 && AoA < User.Default.AoA + 10 && (myIndicator.gears_lamp == "1" || IAS > 100))
+                        if (AoA > Convert.ToDecimal(User.Default.AoA * 0.8) && AoA < User.Default.AoA + 10 && (myIndicator.gears_lamp == "1" || IAS > 100))
                         {
                             if (AoA < User.Default.AoA)
                             {
