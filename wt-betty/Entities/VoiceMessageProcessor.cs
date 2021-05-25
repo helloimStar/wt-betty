@@ -18,6 +18,7 @@ namespace wt_betty.Entities
 
     public abstract class IVoiceMessageProcessor : IDisposable
     {
+        private SoundMessage m_Current;
         private readonly BlockingCollection<SoundMessage> m_MessagesQueue = new BlockingCollection<SoundMessage>();
 
         protected abstract SoundPlayer SoundMsgStart { get; }
@@ -36,6 +37,8 @@ namespace wt_betty.Entities
         
         private void PlayMsg(SoundMessage msg)
         {
+            if (msg == null || (msg.Looped && msg.Equals(m_Current)))
+                return;
             m_MessagesQueue.Add(msg);
         }
 
@@ -48,6 +51,7 @@ namespace wt_betty.Entities
                     bool playInOut = false;
                     foreach (var msgToPlay in m_MessagesQueue.GetConsumingEnumerable())
                     {
+                        m_Current = msgToPlay;
                         if (!playInOut)
                             playInOut = msgToPlay.PlayInOut;
 
@@ -55,6 +59,7 @@ namespace wt_betty.Entities
                             SoundMsgStart?.PlaySync();
 
                         msgToPlay.Play();
+                        m_Current = null;
                     }
                     if (playInOut)
                         SoundMsgEnd?.PlaySync();
@@ -64,22 +69,45 @@ namespace wt_betty.Entities
             }
         }
 
-        public void BingoFuel()     => PlayMsg(MsgBingoFuel);
-        public void AoAMaximum()    => PlayMsg(MsgAoAMaximum);
-        public void AoAOverLimit()  => PlayMsg(MsgAoAOverLimit);
-        public void GMaximum()      => PlayMsg(MsgGMaximum);
-        public void GOverLimit()    => PlayMsg(MsgGOverLimit);
-        public void PullUp()        => PlayMsg(MsgPullUp);
-        public void Overspeed()     => PlayMsg(MsgOverspeed);
-        public void GearUp()        => PlayMsg(MsgGearUp);
-        public void GearDown()      => PlayMsg(MsgGearDown);
-        public void SinkRate()      => PlayMsg(MsgSinkRate);
+        public void BingoFuel()  => PlayMsg(MsgBingoFuel);
+
+        public void AoAMaximum()
+        {
+            MsgAoAOverLimit.Stop();
+            PlayMsg(MsgAoAMaximum);
+        }
+
+        public void AoAOverLimit()
+        {
+            MsgAoAMaximum.Stop();
+            PlayMsg(MsgAoAOverLimit);
+        }
+
+        public void GMaximum()
+        {
+            MsgGOverLimit.Stop();
+            PlayMsg(MsgGMaximum);
+        }
+
+        public void GOverLimit()
+        {
+            MsgGMaximum.Stop();
+            PlayMsg(MsgGOverLimit);
+        }
+
+        public void PullUp() => PlayMsg(MsgPullUp);
+        public void Overspeed() => PlayMsg(MsgOverspeed);
+        public void GearUp() => PlayMsg(MsgGearUp);
+        public void GearDown() => PlayMsg(MsgGearDown);
+        public void SinkRate() => PlayMsg(MsgSinkRate);
 
         protected class SoundMessage
         {
             internal SoundPlayer Sound { get; set; }
             internal bool Looped { get; set; }
             internal bool PlayInOut { get; set; } = true;
+
+            internal long DurationMs { get; }
 
             public void Play()
             {
