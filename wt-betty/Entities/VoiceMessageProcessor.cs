@@ -16,24 +16,24 @@ namespace wt_betty.Entities
         RU_Rita
     }
 
-    public abstract class IVoiceMessageProcessor : IDisposable
+    public abstract class IVoiceMessageProcessor
     {
         private SoundMessage m_Current;
         private readonly BlockingCollection<SoundMessage> m_MessagesQueue = new BlockingCollection<SoundMessage>();
 
-        protected abstract SoundPlayer SoundMsgStart { get; }
-        protected abstract SoundPlayer SoundMsgEnd { get; }
+        protected SoundPlayer SoundMsgStart { get; set; }
+        protected SoundPlayer SoundMsgEnd { get; set; }
 
-        protected abstract SoundMessage MsgBingoFuel { get; }
-        protected abstract SoundMessage MsgAoAMaximum { get; }
-        protected abstract SoundMessage MsgAoAOverLimit { get; }
-        protected abstract SoundMessage MsgGMaximum { get; }
-        protected abstract SoundMessage MsgGOverLimit { get; }
-        protected abstract SoundMessage MsgPullUp { get; }
-        protected abstract SoundMessage MsgOverspeed { get; }
-        protected abstract SoundMessage MsgGearUp { get; }
-        protected abstract SoundMessage MsgGearDown { get; }
-        protected abstract SoundMessage MsgSinkRate { get; }
+        protected SoundMessage MsgBingoFuel { get; set; }
+        protected SoundMessage MsgAoAMaximum { get; set; }
+        protected SoundMessage MsgAoAOverLimit { get; set; }
+        protected SoundMessage MsgGMaximum { get; set; }
+        protected SoundMessage MsgGOverLimit { get; set; }
+        protected SoundMessage MsgPullUp { get; set; }
+        protected SoundMessage MsgOverspeed { get; set; }
+        protected SoundMessage MsgGearUp { get; set; }
+        protected SoundMessage MsgGearDown { get; set; }
+        protected SoundMessage MsgSinkRate { get; set; }
         
         private void PlayMsg(SoundMessage msg)
         {

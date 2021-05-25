@@ -91,6 +91,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="dataModel.cs" />
+    <Compile Include="Entities\RitaProcessor.cs" />
     <Compile Include="Entities\VoiceMessageProcessor.cs" />
     <Compile Include="JsonSerializer.cs" />
     <Compile Include="User.Designer.cs">
