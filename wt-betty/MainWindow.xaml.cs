@@ -308,6 +308,7 @@ namespace wt_betty
                                 myPlayer.PlaySync();
                             }
                             //drift april fools
+                            /*
                             else if (driftSpeed < -50)
                             {
                                 tbx_msgs.Text = "ドリフト! ";
@@ -322,6 +323,7 @@ namespace wt_betty
                                 myPlayer = new System.Media.SoundPlayer(Properties.Resources.ManuelGGG);
                                 myPlayer.PlaySync();
                             }
+                            */
                         }
                     }
                 }
