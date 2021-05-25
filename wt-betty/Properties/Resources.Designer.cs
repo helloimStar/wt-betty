@@ -179,36 +179,87 @@ namespace wt_betty.Properties {
         
         /// <summary>
         ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream RITA_Altitude {
+            get {
+                return ResourceManager.GetStream("RITA_Altitude", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
         internal static System.IO.UnmanagedMemoryStream RITA_AngleOfAttackOverLimit {
             get {
                 return ResourceManager.GetStream("RITA_AngleOfAttackOverLimit", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
         internal static System.IO.UnmanagedMemoryStream RITA_Bingo {
             get {
                 return ResourceManager.GetStream("RITA_Bingo", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream RITA_GearDown {
+            get {
+                return ResourceManager.GetStream("RITA_GearDown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream RITA_GearUp {
+            get {
+                return ResourceManager.GetStream("RITA_GearUp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
         internal static System.IO.UnmanagedMemoryStream RITA_GOverLimit {
             get {
                 return ResourceManager.GetStream("RITA_GOverLimit", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream RITA_MaximumAngleOfAttack {
+            get {
+                return ResourceManager.GetStream("RITA_MaximumAngleOfAttack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
         internal static System.IO.UnmanagedMemoryStream RITA_MaximumSpeed {
             get {
                 return ResourceManager.GetStream("RITA_MaximumSpeed", resourceCulture);
             }
         }
-        internal static System.IO.UnmanagedMemoryStream RITA_PullUp {
-            get {
-                return ResourceManager.GetStream("RITA_PullUp", resourceCulture);
-            }
-        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
         internal static System.IO.UnmanagedMemoryStream RITA_WarningWarning {
             get {
                 return ResourceManager.GetStream("RITA_WarningWarning", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
         /// </summary>
         internal static System.IO.UnmanagedMemoryStream Running90s {
             get {

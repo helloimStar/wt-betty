@@ -220,7 +220,7 @@ namespace wt_betty
                         System.Media.SoundPlayer stall1;
                         System.Media.SoundPlayer stall2;
                         stall1 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_AngleOfAttackOverLimit : Properties.Resources.AngleOfAttackOverLimit);
-                        stall2 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_AngleOfAttackOverLimit : Properties.Resources.MaximumAngleOfAttack);
+                        stall2 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_MaximumAngleOfAttack : Properties.Resources.MaximumAngleOfAttack);
 
                         if (AoA > Convert.ToDecimal(User.Default.AoA * 0.8) && AoA < User.Default.AoA + 10 && (myIndicator.gears_lamp == "1" || IAS > 100))
                         {
@@ -266,7 +266,7 @@ namespace wt_betty
                     if (cbx_pullup.IsChecked == true && 0 - Vspeed * (2 + (decimal)Math.Pow(IAS / 100, 0.7)) > Alt)
                     {
                         System.Media.SoundPlayer myPlayer;
-                        myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_PullUp : Properties.Resources.PullUp);
+                        myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_Altitude : Properties.Resources.PullUp);
                         myPlayer.PlaySync();
                     }
 
@@ -284,7 +284,7 @@ namespace wt_betty
                         if (gear == 100 && IAS > User.Default.GearUp && myIndicator.gears_lamp == "0")
                         {
                             System.Media.SoundPlayer myPlayer;
-                            myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_WarningWarning : Properties.Resources.GearUp);
+                            myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_GearUp : Properties.Resources.GearUp);
                             myPlayer.PlaySync();
                         }
 
@@ -297,7 +297,7 @@ namespace wt_betty
                             if (gear == 0 && myIndicator.gears_lamp != "0" && Throttle < 20)
                             {
                                 System.Media.SoundPlayer myPlayer;
-                                myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_WarningWarning : Properties.Resources.GearDown);
+                                myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_GearDown : Properties.Resources.GearDown);
                                 myPlayer.PlaySync();
                             }
                             //Sink rate warning: WT has a global vertical gear speed limit of 10m/s

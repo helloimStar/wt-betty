@@ -181,10 +181,19 @@
   <data name="RITA_MaximumSpeed" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\RITA-MaximumSpeed.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="RITA_PullUp" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="RITA_Altitude" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\RITA-PullUp.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="RITA_WarningWarning" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\RITA-WarningWarning.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RITA_GearDown" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RITA_GearDown.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RITA_GearUp" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RITA-GearUp.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RITA_MaximumAngleOfAttack" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\RITA-MaximumAngleOfAttack.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

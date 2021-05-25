@@ -91,7 +91,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="dataModel.cs" />
-    <Compile Include="Entities\VoiceTemplate.cs" />
+    <Compile Include="Entities\VoiceMessageProcessor.cs" />
     <Compile Include="JsonSerializer.cs" />
     <Compile Include="User.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -225,9 +225,6 @@
     <None Include="Resources\Running90s.wav" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\RITA-AngleOfAttackOverLimit.wav" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\RITA-Bingo.wav" />
   </ItemGroup>
   <ItemGroup>
@@ -241,6 +238,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\RITA-WarningWarning.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RITA-AngleOfAttackOverLimit.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RITA-MaximumAngleOfAttack.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RITA-GearUp.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RITA_GearDown.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
