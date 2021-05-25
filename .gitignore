@@ -1,16 +1,3 @@
 .vs/
-wt-betty/bin/Release/wt-betty.application
-wt-betty/bin/Release/wt-betty.exe.manifest
-wt-betty/obj/Release/App.g.cs
-wt-betty/obj/Release/App.g.i.cs
-wt-betty/obj/Release/GeneratedInternalTypeHelper.g.cs
-wt-betty/obj/Release/GeneratedInternalTypeHelper.g.i.cs
-wt-betty/obj/Release/MainWindow.baml
-wt-betty/obj/Release/MainWindow.g.cs
-wt-betty/obj/Release/MainWindow.g.i.cs
-wt-betty/obj/Release/wt-betty.application
-wt-betty/obj/Release/wt-betty.csproj.FileListAbsolute.txt
-wt-betty/obj/Release/wt-betty.exe.manifest
-wt-betty/obj/Release/wt-betty_MarkupCompile.i.lref
-wt-betty/obj/Release/wt-betty_MarkupCompile.lref
+wt-betty/bin/
 wt-betty/obj/
