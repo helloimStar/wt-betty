@@ -51,14 +51,12 @@ namespace wt_betty
         {
             if (!Running)
             {
-                Console.WriteLine(DateTime.Now.ToLongTimeString() + " m_ConnectionManager Start");
                 m_CancellationTokenSource = new CancellationTokenSource();
                 List<Task> waitForEndList = new List<Task>();
                 if (m_CheckConnectionTask != null && !m_CheckConnectionTask.IsCompleted)
                     waitForEndList.Add(m_CheckConnectionTask);
                 if (m_GetDataTask != null && !m_GetDataTask.IsCompleted)
                     waitForEndList.Add(m_GetDataTask);
-                Console.WriteLine(DateTime.Now.ToLongTimeString() + " m_ConnectionManager Prepared");
 
                 m_CheckConnectionTask = RepeatableTask.Run(() =>
                 {

@@ -132,7 +132,7 @@ namespace wt_betty
                     int IAS = Convert.ToInt32(myState.IAS);
                     int flaps = Convert.ToInt32(myState.flaps);
 
-                    //Console.Write(myState.AoS);
+                    //Console.WriteLine(myState.AoS);
                     //tbx_msgs.Text = myState.AoS;
                     decimal AoS = Convert.ToDecimal(myState.AoS, culture);
                     int TAS = Convert.ToInt32(myState.TAS, culture);
