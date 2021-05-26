@@ -9,24 +9,38 @@ namespace wt_betty.Entities
     public class AircraftProfile
     {
         public string Name { get; set; }
+        public bool EnableG { get; set; }
+        public int GForce { get; set; }
+        public bool EnableAoA { get; set; }
+        public int AoA { get; set; }
+        public bool EnablePullUp { get; set; }
+        public bool EnableFuel { get; set; }
+        public bool EnableGear { get; set; }
+        public int GearDown { get; set; }
+        public int GearUp { get; set; }
+        public bool EnableOverSpeed { get; set; }
+        public int OverSpeed { get; set; }
+        public VoiceTemplate Voice { get; set; }
+        
+        public AircraftProfile()
+        {
+            Reset();
+        }
 
-        public bool EnableG { get; set; } = true;
-        public int GForce { get; set; } = 6;
-
-        public bool EnableAoA { get; set; } = true;
-        public int AoA { get; set; } = 12;
-
-        public bool EnablePullUp { get; set; } = true;
-
-        public bool EnableFuel { get; set; } = true;
-
-        public bool EnableGear { get; set; } = true;
-        public int GearDown { get; set; } = 270;
-        public int GearUp { get; set; } = 290;
-
-        public bool EnableOverSpeed { get; set; } = true;
-        public int OverSpeed { get; set; } = 820;
-
-        public VoiceTemplate Voice { get; set; } = VoiceTemplate.US_Betty;
+        public void Reset()
+        {
+            EnableG = true;
+            GForce = 6;
+            EnableAoA = true;
+            AoA = 12;
+            EnablePullUp = true;
+            EnableFuel = true;
+            EnableGear = true;
+            GearDown = 270;
+            GearUp = 290;
+            EnableOverSpeed = true;
+            OverSpeed = 820;
+            Voice = VoiceTemplate.US_Betty;
+        }
     }
 }
