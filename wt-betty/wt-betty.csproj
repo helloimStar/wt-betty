@@ -104,7 +104,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="dataModel.cs" />
+    <Compile Include="Entities\DataModel.cs" />
     <Compile Include="Entities\BettyVoiceProcessor.cs" />
     <Compile Include="Entities\RitaVoiceProcessor.cs" />
     <Compile Include="Entities\Settings.cs" />
@@ -112,6 +112,8 @@
     <Compile Include="Entities\VoiceProcessorFactory.cs" />
     <Compile Include="JsonSerializer.cs" />
     <Compile Include="Entities\AircraftProfile.cs" />
+    <Compile Include="ConnectionManager.cs" />
+    <Compile Include="Utils\RepeatableTask.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

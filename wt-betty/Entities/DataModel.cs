@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace wt_betty
+namespace wt_betty.Entities
 {
-    public class indicator
+    public class Indicator
     {
         public string timestamp { get; set; }
         public string valid { get; set; }
@@ -43,7 +43,8 @@ namespace wt_betty
         public string ammo_counter4 { get; set; }
 
     }
-    public class state
+
+    public class State
     {
         public string timestamp { get; set; }
 

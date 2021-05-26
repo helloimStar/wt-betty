@@ -8,6 +8,8 @@ using System.Windows.Data;
 using wt_betty.Entities;
 using System.Collections.Generic;
 using WPFCustomMessageBox;
+using System.Collections.ObjectModel;
+using System.Threading;
 
 namespace wt_betty
 {
@@ -25,17 +27,13 @@ namespace wt_betty
 
     public partial class MainWindow : Window
     {
-
-        private indicator myIndicator = new indicator();
-        private state myState = new state();
-        string indicatorsurl = "http://localhost:8111/indicators";
-        string statesurl = "http://localhost:8111/state";
-        DispatcherTimer dispatcherTimer1 = new DispatcherTimer();
-        DispatcherTimer dispatcherTimer2 = new DispatcherTimer();
+        private Indicator myIndicator = new Indicator();
+        private State myState = new State();
         CultureInfo culture = new CultureInfo("en-US");
         FlowDocument myFlowDoc = new FlowDocument();
         Paragraph par = new Paragraph();
 
+        private ConnectionManager m_ConnectionManager = new ConnectionManager();
         private Settings Settings { get => Settings.Instance; }
         private VoiceProcessor VoiceProcessor { get; set; }
         private AircraftProfile CurrentProfile
@@ -43,7 +41,7 @@ namespace wt_betty
             get => (AircraftProfile)cmb_profile.SelectedItem;
             set
             {
-                var profile = value;            
+                var profile = value;
                 var oldValue = CurrentProfile;
 
                 if (profile != oldValue) {
@@ -65,7 +63,7 @@ namespace wt_betty
                 return null;
             }
         }
-        private List<AircraftProfile> Profiles { get; set; } = new List<AircraftProfile>();
+        private ObservableCollection<AircraftProfile> Profiles { get; set; } = new ObservableCollection<AircraftProfile>();
 
         public MainWindow()
         {
@@ -83,94 +81,39 @@ namespace wt_betty
             }
 
             Profiles.Add(Settings.Default);
-            Profiles.AddRange(Settings.Profiles.Values);
+            foreach (var profile in Settings.Profiles.Values)
+                Profiles.Add(profile);
 
             cmb_profile.ItemsSource = Profiles;
             cmb_profile.DisplayMemberPath = "Name";
             CurrentProfile = Settings.Default;
 
-            dispatcherTimer1.Tick += new EventHandler(dispatcherTimer1_Tick);
-            dispatcherTimer1.Interval = new TimeSpan(0, 0, 0, 0, 200);
-            dispatcherTimer2.Tick += new EventHandler(dispatcherTimer2_Tick);
-            dispatcherTimer2.Interval = new TimeSpan(0, 0, 5);
+            m_ConnectionManager.OnConnectionChanged += OnConnectionChanged;
+            m_ConnectionManager.OnStateUpdated += OnStateUpdated;
         }
 
-        private void dispatcherTimer2_Tick(object sender, EventArgs e)
+        private void OnConnectionChanged(object sender, EventArgs e)
         {
-            WTConnect();
+            var connectionArgs = e as ConnectionEventArgs;
+            bool connected = connectionArgs.Connected;
+            tbx_msgs.Text = (connected  ? "Running" : "Connection failed");
         }
 
-        public void WTConnect()
+        private void OnStateUpdated(object sender, EventArgs e)
         {
-            try
-            {
-                if (BaglantiVarmi("localhost", 8111))
-                {
-                    myState = JsonSerializer._download_serialized_json_data<state>(statesurl);
-                    if (myState.valid == "true")
-                    {
-                        dispatcherTimer2.Stop();
-                        dispatcherTimer1.Start();
-                        tbx_msgs.Text = ("Running");
-                    }
-                    else if (myState.valid == "false")
-                    {
-                        dispatcherTimer2.Start();
-                        dispatcherTimer1.Stop();
-                        tbx_msgs.Text = "Waiting for a flight...";
-                    }
-                    button_start.IsEnabled = false;
-                    button_stop.IsEnabled = true;
-
-                }
-                else
-                {
-                    //Dinlemeye geç
-                    dispatcherTimer2.Start();
-                    dispatcherTimer1.Stop();
-                    tbx_msgs.Text = ("War Thunder is not running...");
-
-                    button_start.IsEnabled = true;
-                    button_stop.IsEnabled = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                tbx_msgs.Text = ex.Message;
-                dispatcherTimer1.Stop();
-                dispatcherTimer2.Start();
-                button_start.IsEnabled = true;
-                button_stop.IsEnabled = false;
-
-            }
+            var stateArgs = e as StateEventArgs;
+            if (stateArgs.ErrorDetails == null)
+                UpdateData(stateArgs.Indicator, stateArgs.State);
+            else
+                tbx_msgs.Text = stateArgs.ErrorDetails;
         }
-
-        private void dispatcherTimer1_Tick(object sender, EventArgs e)
-        {
-            getData();
-        }
-
-        private bool BaglantiVarmi(string adres, int port)
+        
+        private void UpdateData(Indicator indicator, State state)
         {
             try
             {
-                System.Net.Sockets.TcpClient baglanti = new System.Net.Sockets.TcpClient(adres, port);
-                baglanti.Close();
-
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private void getData()
-        {
-            try
-            {
-                myIndicator = JsonSerializer._download_serialized_json_data<indicator>(indicatorsurl);
-                myState = JsonSerializer._download_serialized_json_data<state>(statesurl);
+                myIndicator = indicator;
+                myState = state;
 
                 var currentAircraft = CurrentAircraft;
                 if (currentAircraft != null)
@@ -291,17 +234,10 @@ namespace wt_betty
                         }
                     }
                 }
-                else
-                {
-                    dispatcherTimer1.Stop();
-                    dispatcherTimer2.Start();
-                }
             }
             catch (Exception ex)
             {
                 tbx_msgs.Text = ex.Message;
-                dispatcherTimer1.Stop();
-                dispatcherTimer2.Start();
             }
         }
 
@@ -331,23 +267,27 @@ namespace wt_betty
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            dispatcherTimer1.Stop();
-            dispatcherTimer2.Stop();
+            m_ConnectionManager.Stop();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            WTConnect();
+            tbx_msgs.Text = "Connecting";
+            m_ConnectionManager.Start();
+            button_start.IsEnabled = false;
+            button_stop.IsEnabled = true;
         }
 
         private void button_start_Click(object sender, RoutedEventArgs e)
         {
             VoiceProcessor?.Start();
-            dispatcherTimer2.Start();
-            if (dispatcherTimer2.IsEnabled)
+
+            if (!m_ConnectionManager.Running)
             {
+                tbx_msgs.Text = "Connecting";
                 button_start.IsEnabled = false;
                 button_stop.IsEnabled = true;
+                m_ConnectionManager.Start();
             }
         }
 
@@ -355,10 +295,10 @@ namespace wt_betty
         private void button_stop_Click(object sender, RoutedEventArgs e)
         {
             VoiceProcessor?.Stop();
-            dispatcherTimer1.Stop();
-            dispatcherTimer2.Stop();
+            m_ConnectionManager.Stop();
             button_start.IsEnabled = true;
             button_stop.IsEnabled = false;
+            tbx_msgs.Text = "Stopped";
         }
 
         private void button_save_Click(object sender, RoutedEventArgs e)
@@ -456,6 +396,11 @@ namespace wt_betty
             var helpFile = Path.Combine(Path.GetTempPath(), "wt-betty-help.txt");
             File.WriteAllText(helpFile, Properties.Resources.wt_betty_help);
             System.Diagnostics.Process.Start(helpFile);
+        }
+
+        private void cmb_profile_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            UpdateProfileUI(CurrentProfile);
         }
     }
 

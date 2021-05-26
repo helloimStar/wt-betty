@@ -122,7 +122,8 @@ namespace wt_betty.Entities
                                         SoundMsgStart?.PlaySync();
 
                                     msgToPlay.Play();
-                                    m_Current = null;
+                                    if (!msgToPlay.Looped)
+                                        m_Current = null;
                                 }
                             }
                             if (playInOut)
@@ -135,9 +136,11 @@ namespace wt_betty.Entities
                     }
                 }
                 catch (ThreadInterruptedException) { /*ignored*/}
+                catch (OperationCanceledException) { /*ignored*/}
                 catch (Exception e)
                 {
-                    Start();
+                    if (!m_CancellationToken.IsCancellationRequested)
+                        Start();
                 }
 
             }, m_CancellationToken.Token);
@@ -146,6 +149,7 @@ namespace wt_betty.Entities
         public void Stop()
         {
             m_Current?.Stop();
+            m_Current = null;
             m_CancellationToken.Cancel();
         }
 
