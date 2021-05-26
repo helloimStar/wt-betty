@@ -16,11 +16,16 @@ namespace wt_betty.Entities
         RU_Rita
     }
 
-    public abstract class VoiceMessageProcessor
+    public abstract class VoiceMessageProcessor : IDisposable
     {
-        private SoundMessage m_Current;
+        private bool m_Disposed;
         private readonly BlockingCollection<SoundMessage> m_MessagesQueue = new BlockingCollection<SoundMessage>();
+        
+        private Task m_ProcessingTask;
+        private CancellationTokenSource m_CancellationToken;
+        private SoundMessage m_Current;
 
+        #region Messages set defining
         protected SoundPlayer SoundMsgStart { get; set; }
         protected SoundPlayer SoundMsgEnd { get; set; }
 
@@ -34,80 +39,190 @@ namespace wt_betty.Entities
         protected SoundMessage MsgGearUp { get; set; }
         protected SoundMessage MsgGearDown { get; set; }
         protected SoundMessage MsgSinkRate { get; set; }
-        
-        private void PlayMsg(SoundMessage msg)
+        #endregion
+
+        #region disposing
+        public void Dispose()
         {
-            if (msg == null || (msg.Looped && msg.Equals(m_Current)))
-                return;
-            m_MessagesQueue.Add(msg);
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
-        private void Behaviour()
+        protected virtual void Dispose(bool disposing)
         {
-            while (!m_MessagesQueue.IsAddingCompleted)
+            if (!m_Disposed)
             {
-                if (m_MessagesQueue.Count() > 0)
+                if (disposing)
                 {
-                    bool playInOut = false;
-                    foreach (var msgToPlay in m_MessagesQueue.GetConsumingEnumerable())
-                    {
-                        m_Current = msgToPlay;
-                        if (!playInOut)
-                            playInOut = msgToPlay.PlayInOut;
+                    m_MessagesQueue.CompleteAdding();
+                    Stop();
+                    m_MessagesQueue.Dispose();
+                    m_CancellationToken?.Dispose();
+                    m_Current?.Dispose();
+                    m_ProcessingTask.Dispose();
 
-                        if (playInOut)
-                            SoundMsgStart?.PlaySync();
+                    SoundMsgStart?.Dispose();
+                    SoundMsgEnd?.Dispose();
 
-                        msgToPlay.Play();
-                        m_Current = null;
-                    }
-                    if (playInOut)
-                        SoundMsgEnd?.PlaySync();
+                    MsgBingoFuel?.Dispose();
+                    MsgAoAMaximum?.Dispose();
+                    MsgAoAOverLimit?.Dispose();
+                    MsgGMaximum?.Dispose();
+                    MsgGOverLimit?.Dispose();
+                    MsgPullUp?.Dispose();
+                    MsgOverspeed?.Dispose();
+                    MsgGearUp?.Dispose();
+                    MsgGearDown?.Dispose();
+                    MsgSinkRate?.Dispose();
                 }
-                else
-                    Thread.Sleep(100);
+                m_Disposed = true;
+            }
+        }
+        #endregion
+
+        public void Start()
+        {
+            if (m_ProcessingTask != null && !m_ProcessingTask.IsCompleted)
+            {
+                m_ProcessingTask.Wait();
+                m_ProcessingTask.Dispose();
+            }
+
+            m_CancellationToken?.Dispose();
+            m_CancellationToken = new CancellationTokenSource();
+
+            m_ProcessingTask = Task.Factory.StartNew(() =>
+            {
+                while (!m_MessagesQueue.IsAddingCompleted && !m_CancellationToken.IsCancellationRequested)
+                {
+                    if (m_MessagesQueue.Count() > 0)
+                    {
+                        bool playInOut = false;
+                        foreach (var msgToPlay in m_MessagesQueue.GetConsumingEnumerable(m_CancellationToken.Token))
+                        {
+                            if (msgToPlay.Actual)
+                            {
+                                m_Current = msgToPlay;
+                                if (!playInOut)
+                                    playInOut = msgToPlay.PlayInOut;
+
+                                if (playInOut)
+                                    SoundMsgStart?.PlaySync();
+
+                                msgToPlay.Play();
+                                m_Current = null;
+                            }
+                        }
+                        if (playInOut)
+                            SoundMsgEnd?.PlaySync();
+                    }
+                    else if (!m_CancellationToken.IsCancellationRequested)
+                        Thread.Sleep(100);
+                    else
+                        return;
+                }
+
+            }, m_CancellationToken.Token);
+        }
+
+        public void Stop()
+        {
+            m_Current?.Stop();
+            m_CancellationToken.Cancel();
+        }
+
+        private void PlayMsg(SoundMessage msg)
+        {
+            if (msg != null)
+            {
+                msg.Actual = true;
+                if (msg.Equals(m_Current))
+                    return;
+                m_MessagesQueue.Add(msg);
             }
         }
 
-        public void BingoFuel()  => PlayMsg(MsgBingoFuel);
-
-        public void AoAMaximum()
+        private void CancelMsg(SoundMessage msg)
         {
-            MsgAoAOverLimit.Stop();
-            PlayMsg(MsgAoAMaximum);
+            if (msg != null)
+            {
+                msg.Actual = false;
+                //do not interrupt if is playing now
+                //msg.Stop();
+            }
         }
 
-        public void AoAOverLimit()
+        private void ProcessMsg(SoundMessage msg, bool actual)
         {
-            MsgAoAMaximum.Stop();
-            PlayMsg(MsgAoAOverLimit);
+            if (actual)
+                PlayMsg(msg);
+            else
+                CancelMsg(msg);
         }
 
-        public void GMaximum()
+        #region Messages
+        public void BingoFuel(bool actual = true)  => ProcessMsg(MsgBingoFuel, actual);
+
+        public void AoAMaximum(bool actual = true)
         {
-            MsgGOverLimit.Stop();
-            PlayMsg(MsgGMaximum);
+            CancelMsg(MsgAoAOverLimit);
+            ProcessMsg(MsgAoAMaximum, actual);
         }
 
-        public void GOverLimit()
+        public void AoAOverLimit(bool actual = true)
         {
-            MsgGMaximum.Stop();
-            PlayMsg(MsgGOverLimit);
+            CancelMsg(MsgAoAMaximum);
+            ProcessMsg(MsgAoAOverLimit, actual);
         }
 
-        public void PullUp() => PlayMsg(MsgPullUp);
-        public void Overspeed() => PlayMsg(MsgOverspeed);
-        public void GearUp() => PlayMsg(MsgGearUp);
-        public void GearDown() => PlayMsg(MsgGearDown);
-        public void SinkRate() => PlayMsg(MsgSinkRate);
-
-        protected class SoundMessage
+        public void GMaximum(bool actual = true)
         {
+            CancelMsg(MsgGOverLimit);
+            ProcessMsg(MsgGMaximum, actual);
+        }
+
+        public void GOverLimit(bool actual = true)
+        {
+            CancelMsg(MsgGMaximum);
+            ProcessMsg(MsgGOverLimit, actual);
+        }
+
+        public void PullUp(bool actual = true) => ProcessMsg(MsgPullUp, actual);
+        public void Overspeed(bool actual = true) => ProcessMsg(MsgOverspeed, actual);
+        public void GearUp(bool actual = true) => ProcessMsg(MsgGearUp, actual);
+        public void GearDown(bool actual = true) => ProcessMsg(MsgGearDown, actual);
+        public void SinkRate(bool actual = true) => ProcessMsg(MsgSinkRate, actual);
+        #endregion
+
+        protected class SoundMessage : IDisposable
+        {
+            private bool m_Disposed;
+
             internal SoundPlayer Sound { get; set; }
             internal bool Looped { get; set; }
             internal bool PlayInOut { get; set; } = true;
 
-            internal long DurationMs { get; }
+            //Is this message actual for current flight data or should be ignored in queue
+            internal bool Actual { get; set; } = true;
+
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!m_Disposed)
+                {
+                    if (disposing)
+                    {
+                        Stop();
+                        Sound?.Dispose();
+                    }
+                    m_Disposed = true;
+                }
+            }
 
             public void Play()
             {
@@ -120,7 +235,7 @@ namespace wt_betty.Entities
             public void Stop()
             {
                 Sound?.Stop();
-            }
+            }            
         }
     }
 }
