@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace wt_betty.Entities
 {
-    public sealed class RitaProcessor : VoiceMessageProcessor
+    public sealed class RitaVoiceProcessor : VoiceProcessor
     {
-        public RitaProcessor()
+        public static readonly RitaVoiceProcessor Instance = new RitaVoiceProcessor();
+
+        private RitaVoiceProcessor()
         {
             MsgBingoFuel = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_Bingo) };
             MsgAoAMaximum = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_MaximumAngleOfAttack) };

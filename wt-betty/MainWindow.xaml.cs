@@ -5,6 +5,9 @@ using System.Globalization;
 using System.Windows.Documents;
 using System.IO;
 using System.Windows.Data;
+using wt_betty.Entities;
+using System.Collections.Generic;
+using WPFCustomMessageBox;
 
 namespace wt_betty
 {
@@ -33,31 +36,58 @@ namespace wt_betty
         FlowDocument myFlowDoc = new FlowDocument();
         Paragraph par = new Paragraph();
 
+        private Settings Settings { get => Settings.Instance; }
+        private VoiceProcessor VoiceProcessor { get; set; }
+        private AircraftProfile CurrentProfile
+        {
+            get => (AircraftProfile)cmb_profile.SelectedItem;
+            set
+            {
+                var profile = value;            
+                var oldValue = CurrentProfile;
+
+                if (profile != oldValue) {
+                    cmb_profile.SelectedItem = profile;
+                    UpdateProfileUI(profile);
+                }
+            }
+        }
+        private string CurrentAircraft
+        {
+            get
+            {
+                if (myState != null && myIndicator != null)
+                {
+                    bool valid = myState.valid == "true" && myIndicator.valid == "true" && myIndicator.type != null && myIndicator.type != "dummy_plane";
+                    if (valid)
+                        return myIndicator.type;
+                }
+                return null;
+            }
+        }
+        private List<AircraftProfile> Profiles { get; set; } = new List<AircraftProfile>();
+
         public MainWindow()
         {
             InitializeComponent();
-            cbx_g.IsChecked = User.Default.EnableG;
-            slider_G.Value = Convert.ToDouble(User.Default.GForce);
-            textBox_gSlider.Text = slider_G.Value.ToString();
-            cbx_a.IsChecked = User.Default.EnableA;
-            slider_A.Value = Convert.ToDouble(User.Default.AoA);
-            textBox_aSlider.Text = slider_A.Value.ToString();
-            cbx_overSpeed.IsChecked = User.Default.EnableOverSpeed;
-            tbx_overSpeed.Text = User.Default.OverSpeed.ToString();
-            cbx_pullup.IsChecked = User.Default.EnablePullUp;
-            cbx_fuel.IsChecked = User.Default.EnableFuel;
-            cbx_gear.IsChecked = User.Default.EnableGear;
-            tbx_gearDown.Text = User.Default.GearDown.ToString();
-            tbx_gearUp.Text = User.Default.GearUp.ToString();
 
-            var voiceTemplate = Entities.VoiceTemplate.US_Betty;
-            if (Enum.IsDefined(typeof(Entities.VoiceTemplate), User.Default.VoiceTemplate))
-                voiceTemplate = (Entities.VoiceTemplate)User.Default.VoiceTemplate;
-            else
-                voiceTemplate = Entities.VoiceTemplate.US_Betty;
+            try
+            {
+                if (!File.Exists(Settings.PATH))
+                    Settings.Save();
+                Settings.Load();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Failed to load settings.txt", "Error");
+            }
 
-            rb_betty.IsChecked = voiceTemplate == Entities.VoiceTemplate.US_Betty;
-            rb_rita.IsChecked = voiceTemplate == Entities.VoiceTemplate.RU_Rita;
+            Profiles.Add(Settings.Default);
+            Profiles.AddRange(Settings.Profiles.Values);
+
+            cmb_profile.ItemsSource = Profiles;
+            cmb_profile.DisplayMemberPath = "Name";
+            CurrentProfile = Settings.Default;
 
             dispatcherTimer1.Tick += new EventHandler(dispatcherTimer1_Tick);
             dispatcherTimer1.Interval = new TimeSpan(0, 0, 0, 0, 200);
@@ -135,44 +165,6 @@ namespace wt_betty
             }
         }
 
-        /// <summary>
-        /// JSON saver
-        /// </summary>
-        ///
-        /*
-        private void saveToJSON()
-        {
-            //TODO
-            try
-            {
-                myState = JsonSerializer._download_serialized_json_data<state>(statesurl);
-                if ((myState.valid == "true") && (myIndicator.valid == "true") && (myIndicator.type != "dummy_plane") && (myIndicator.type != null))
-                {
-                    //using (StreamReader file = File.OpenText(myIndicator.type + ".json"));
-                    
-                    //string json = File.ReadAllText("myobjects.json");
-                    //var playerList = JsonConvert.DeserializeObject<List<Player>>(json);
-                    
-                    string filePath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\")) + @"Data\Country.json";
-                    
-                    string _countryJson = File.ReadAllText(filePath);
-                    
-                    //var _country = JsonConvert.DeserializeObject<List<Country>>(_countryJson);
-                    
-
-                    //save file thing here
-                    //File.WriteAllText("myobjects.json", JsonConvert.SerializeObject(playerList));
-                }
-            }
-            catch (Exception ex)
-            {
-                tbx_msgs.Text = ex.Message;
-                dispatcherTimer1.Stop();
-                dispatcherTimer2.Start();
-            }
-        }
-    */
-
         private void getData()
         {
             try
@@ -180,8 +172,11 @@ namespace wt_betty
                 myIndicator = JsonSerializer._download_serialized_json_data<indicator>(indicatorsurl);
                 myState = JsonSerializer._download_serialized_json_data<state>(statesurl);
 
-                if ((myState.valid == "true") && (myIndicator.valid == "true") && (myIndicator.type != "dummy_plane") && (myIndicator.type != null))
+                var currentAircraft = CurrentAircraft;
+                if (currentAircraft != null)
                 {
+                    var currentProfile = Settings.Profiles[currentAircraft] ?? Settings.Default;
+                    CurrentProfile = currentProfile;
 
                     decimal G = Convert.ToDecimal(myState.Ny, culture);
                     decimal AoA = Convert.ToDecimal(myState.AoA, culture);
@@ -194,119 +189,88 @@ namespace wt_betty
                     int IAS = Convert.ToInt32(myState.IAS);
                     int flaps = Convert.ToInt32(myState.flaps);
 
-                    Console.Write(myState.AoS);
+                    //Console.Write(myState.AoS);
                     //tbx_msgs.Text = myState.AoS;
                     decimal AoS = Convert.ToDecimal(myState.AoS, culture);
                     int TAS = Convert.ToInt32(myState.TAS, culture);
                     label.Content = myIndicator.type;
-                    
-                    var voiceTemplate = Entities.VoiceTemplate.US_Betty;
-                    if (Enum.IsDefined(typeof(Entities.VoiceTemplate), User.Default.VoiceTemplate))
-                        voiceTemplate = (Entities.VoiceTemplate)User.Default.VoiceTemplate;
-                    else
-                        voiceTemplate = Entities.VoiceTemplate.US_Betty;
 
                     //BINGO FUEL
-                    if (cbx_fuel.IsChecked == true &&  Fuel / FuelFull < 103 && Fuel / FuelFull > 100 && Throttle > 0)
+                    if (cbx_fuel.IsChecked == true)
                     {
-                        System.Media.SoundPlayer myPlayer;
-                        myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_Bingo : Properties.Resources.Bingo);
-                        myPlayer.PlaySync();
+                        bool bingoFuel = Fuel / FuelFull < 103 && Fuel / FuelFull > 100 && Throttle > 0;
+                        VoiceProcessor.BingoFuel(bingoFuel);
                     }
+                    
 
                     //STALL WARNING
                     if (cbx_a.IsChecked == true)
-                    {   //Stall Warning Mandatory pre-definitnions
-                        System.Media.SoundPlayer stall1;
-                        System.Media.SoundPlayer stall2;
-                        stall1 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_AngleOfAttackOverLimit : Properties.Resources.AngleOfAttackOverLimit);
-                        stall2 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_MaximumAngleOfAttack : Properties.Resources.MaximumAngleOfAttack);
-
-                        if (AoA > Convert.ToDecimal(User.Default.AoA * 0.8) && AoA < User.Default.AoA + 10 && (myIndicator.gears_lamp == "1" || IAS > 100))
+                    {
+                        bool stallWarning = AoA > Convert.ToDecimal(currentProfile.AoA * 0.8) && AoA < currentProfile.AoA + 10 && (myIndicator.gears_lamp == "1" || IAS > 100);
+                        if (stallWarning)
                         {
-                            if (AoA < User.Default.AoA)
-                            {
-                                stall1.Stop();
-                                stall2.PlayLooping();
-                            }
+                            if (AoA < currentProfile.AoA)
+                                VoiceProcessor.AoAMaximum();
                             else
-                            {
-                                stall2.Stop();
-                                stall1.PlayLooping();
-                            }//multi-layer AoA warnings as a variable-pitch isn't supported by MS's package
+                                VoiceProcessor.AoAOverLimit();
                         }
                         else
-                        { stall1.Stop(); stall2.Stop(); }
+                        {
+                            VoiceProcessor.AoAMaximum(false);
+                            VoiceProcessor.AoAOverLimit(false);
+                        }
                     }
                     
                     //G OVERLOAD
                     if (cbx_g.IsChecked == true)
                     {
-                        System.Media.SoundPlayer G1;
-                        System.Media.SoundPlayer G2;
-                        G1 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_GOverLimit : Properties.Resources.OverG);
-                        G2 = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_GOverLimit: Properties.Resources.GOverLimit);
-                        if (G > User.Default.GForce || (double)G < -0.4 * User.Default.GForce)
+                        bool gOverload = G > currentProfile.GForce || (double)G < -0.4 * currentProfile.GForce;
+                        if (gOverload)
                         {
-                            if (G > User.Default.GForce + 3 - User.Default.GForce / (decimal)3)
-                            {
-                                G1.Stop();
-                                G2.PlaySync();
-                            }
+                            if (G > currentProfile.GForce + 3 - currentProfile.GForce / (decimal)3)
+                                VoiceProcessor.GMaximum();
                             else
-                            {
-                                G2.Stop();
-                                G1.PlaySync();
-                            }
+                                VoiceProcessor.GOverLimit();
+                        }
+                        else
+                        {
+                            VoiceProcessor.GMaximum(false);
+                            VoiceProcessor.GOverLimit(false);
                         }
                     }
-                    
+
                     //PULL UP Ground/sea level Proximity Warning
                     //desirable to have about 3 seconds before crash
-                    if (cbx_pullup.IsChecked == true && 0 - Vspeed * (2 + (decimal)Math.Pow(IAS / 100, 0.7)) > Alt)
+                    if (cbx_pullup.IsChecked == true)
                     {
-                        System.Media.SoundPlayer myPlayer;
-                        myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_Altitude : Properties.Resources.PullUp);
-                        myPlayer.PlaySync();
+                        bool pullUp = 0 - Vspeed * (2 + (decimal)Math.Pow(IAS / 100, 0.7)) > Alt;
+                        VoiceProcessor.PullUp(pullUp);
                     }
 
                     //Overspeed
-                    if (cbx_overSpeed.IsChecked == true && IAS > User.Default.OverSpeed)
+                    if (cbx_overSpeed.IsChecked == true)
                     {
-                        System.Media.SoundPlayer myPlayer;
-                        myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_MaximumSpeed : Properties.Resources.OverSpeed);
-                        myPlayer.PlaySync();
+                        bool overSpeed = IAS > currentProfile.OverSpeed;
+                        VoiceProcessor.Overspeed(overSpeed);
                     }
 
                     //GEAR UP/DOWN
-                    if (User.Default.EnableGear == true)
+                    if (currentProfile.EnableGear == true)
                     {
-                        if (gear == 100 && IAS > User.Default.GearUp && myIndicator.gears_lamp == "0")
-                        {
-                            System.Media.SoundPlayer myPlayer;
-                            myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_GearUp : Properties.Resources.GearUp);
-                            myPlayer.PlaySync();
-                        }
+                        bool gearUp = gear == 100 && IAS > currentProfile.GearUp && myIndicator.gears_lamp == "0";
+                        VoiceProcessor.GearUp(gearUp);
 
                         if ((AoA < 20 || Vspeed > -10) &&
-                            IAS < User.Default.GearDown && IAS > 40/*Alt < 500 && flaps > 20*/)
+                            IAS < currentProfile.GearDown && IAS > 40/*Alt < 500 && flaps > 20*/)
                         {
                             float Deg2Rad = (float)(Math.PI / 180f);
                             float driftSpeed = (float)(TAS * Math.Sin(Deg2Rad * (float)AoS));
 
-                            if (gear == 0 && myIndicator.gears_lamp != "0" && Throttle < 20)
-                            {
-                                System.Media.SoundPlayer myPlayer;
-                                myPlayer = new System.Media.SoundPlayer(voiceTemplate == Entities.VoiceTemplate.RU_Rita ? Properties.Resources.RITA_GearDown : Properties.Resources.GearDown);
-                                myPlayer.PlaySync();
-                            }
+                            bool gearDown = gear == 0 && myIndicator.gears_lamp != "0" && Throttle < 20;
+                            VoiceProcessor.GearDown(gearDown);
                             //Sink rate warning: WT has a global vertical gear speed limit of 10m/s
-                            else if (Vspeed < -8 && Throttle < 60)
-                            {
-                                System.Media.SoundPlayer myPlayer;
-                                myPlayer = new System.Media.SoundPlayer(Properties.Resources.SinkRate);
-                                myPlayer.PlaySync();
-                            }
+                            bool sinkRate = !gearDown && (Vspeed < -8 && Throttle < 60);
+                            VoiceProcessor.SinkRate(sinkRate);
                             //drift april fools
                             /*
                             else if (driftSpeed < -50)
@@ -341,6 +305,30 @@ namespace wt_betty
             }
         }
 
+        private void UpdateProfileUI(AircraftProfile profile)
+        {
+            cbx_g.IsChecked = profile.EnableG;
+            slider_G.Value = Convert.ToDouble(profile.GForce);
+            textBox_gSlider.Text = slider_G.Value.ToString();
+            cbx_a.IsChecked = profile.EnableAoA;
+            slider_A.Value = Convert.ToDouble(profile.AoA);
+            textBox_aSlider.Text = slider_A.Value.ToString();
+            cbx_overSpeed.IsChecked = profile.EnableOverSpeed;
+            tbx_overSpeed.Text = profile.OverSpeed.ToString();
+            cbx_pullup.IsChecked = profile.EnablePullUp;
+            cbx_fuel.IsChecked = profile.EnableFuel;
+            cbx_gear.IsChecked = profile.EnableGear;
+            tbx_gearDown.Text = profile.GearDown.ToString();
+            tbx_gearUp.Text = profile.GearUp.ToString();
+            var voice = profile.Voice;
+            rb_betty.IsChecked = voice == VoiceTemplate.US_Betty;
+            rb_rita.IsChecked = voice == VoiceTemplate.RU_Rita;
+
+            VoiceProcessor?.Stop();
+            VoiceProcessor = VoiceProcessorFactory.GetProcessor(voice);
+            VoiceProcessor?.Start();
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             dispatcherTimer1.Stop();
@@ -354,6 +342,7 @@ namespace wt_betty
 
         private void button_start_Click(object sender, RoutedEventArgs e)
         {
+            VoiceProcessor?.Start();
             dispatcherTimer2.Start();
             if (dispatcherTimer2.IsEnabled)
             {
@@ -365,35 +354,78 @@ namespace wt_betty
         //TODO: User-assigned key binding for toggle of the program
         private void button_stop_Click(object sender, RoutedEventArgs e)
         {
+            VoiceProcessor?.Stop();
             dispatcherTimer1.Stop();
             dispatcherTimer2.Stop();
             button_start.IsEnabled = true;
             button_stop.IsEnabled = false;
-            System.Media.SoundPlayer myPlayer1;
-            System.Media.SoundPlayer myPlayer2;
-            myPlayer1 = new System.Media.SoundPlayer(Properties.Resources.AngleOfAttackOverLimit);
-            myPlayer2 = new System.Media.SoundPlayer(Properties.Resources.MaximumAngleOfAttack);
-            myPlayer1.Stop();myPlayer2.Stop();
         }
 
         private void button_save_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                User.Default.EnableG = cbx_g.IsChecked.Value;
-                User.Default.GForce = Convert.ToInt32(slider_G.Value);
-                User.Default.EnableA = cbx_a.IsChecked.Value;
-                User.Default.AoA = Convert.ToInt32(slider_A.Value);
-                User.Default.EnablePullUp = cbx_pullup.IsChecked.Value;
-                User.Default.EnableOverSpeed = cbx_overSpeed.IsChecked.Value;
-                User.Default.OverSpeed = Convert.ToInt32(tbx_overSpeed.Text);
-                User.Default.EnableFuel = cbx_fuel.IsChecked.Value;
-                User.Default.EnableGear = cbx_gear.IsChecked.Value;
-                User.Default.GearDown = Convert.ToInt32(tbx_gearDown.Text);
-                User.Default.GearUp = Convert.ToInt32(tbx_gearUp.Text);
-                User.Default.VoiceTemplate = (int)(rb_rita.IsChecked.Value ? Entities.VoiceTemplate.RU_Rita : Entities.VoiceTemplate.US_Betty);
-                
-                User.Default.Save();
+                var currentProfile = CurrentProfile;
+                if (currentProfile != null)
+                {
+                    if (currentProfile == Settings.Default)
+                    {
+                        var currentAircraft = CurrentAircraft;
+
+                        if (!string.IsNullOrEmpty(currentAircraft) && !Settings.Profiles.ContainsKey(currentAircraft))
+                        {
+                            var result = CustomMessageBox.ShowYesNoCancel(string.Format("Aircraft {0} profile not found. Would you like to create it or update default profile?", currentAircraft)
+                                , "Select action"
+                                , "Create new"
+                                , "Update default"
+                                , "Cancel"
+                                , MessageBoxImage.Question
+                            );
+                            switch (result)
+                            {
+                                case MessageBoxResult.Yes:
+                                    var newProfile = new AircraftProfile()
+                                    {
+                                        Name = currentAircraft,
+                                        EnableG = cbx_g.IsChecked.Value,
+                                        GForce = Convert.ToInt32(slider_G.Value),
+                                        EnableAoA = cbx_a.IsChecked.Value,
+                                        AoA = Convert.ToInt32(slider_A.Value),
+                                        EnablePullUp = cbx_pullup.IsChecked.Value,
+                                        EnableOverSpeed = cbx_overSpeed.IsChecked.Value,
+                                        OverSpeed = Convert.ToInt32(tbx_overSpeed.Text),
+                                        EnableFuel = cbx_fuel.IsChecked.Value,
+                                        EnableGear = cbx_gear.IsChecked.Value,
+                                        GearDown = Convert.ToInt32(tbx_gearDown.Text),
+                                        GearUp = Convert.ToInt32(tbx_gearUp.Text),
+                                        Voice = rb_rita.IsChecked.Value ? VoiceTemplate.RU_Rita : VoiceTemplate.US_Betty
+                                    };
+                                    Settings.Profiles.Add(currentAircraft, newProfile);
+                                    Profiles.Add(newProfile);
+                                    CurrentProfile = newProfile;
+                                    break;
+                                case MessageBoxResult.No:
+                                    break;
+                                default:
+                                    return;
+                            }
+                        }
+                    }
+                    currentProfile.EnableG = cbx_g.IsChecked.Value;
+                    currentProfile.GForce = Convert.ToInt32(slider_G.Value);
+                    currentProfile.EnableAoA = cbx_a.IsChecked.Value;
+                    currentProfile.AoA = Convert.ToInt32(slider_A.Value);
+                    currentProfile.EnablePullUp = cbx_pullup.IsChecked.Value;
+                    currentProfile.EnableOverSpeed = cbx_overSpeed.IsChecked.Value;
+                    currentProfile.OverSpeed = Convert.ToInt32(tbx_overSpeed.Text);
+                    currentProfile.EnableFuel = cbx_fuel.IsChecked.Value;
+                    currentProfile.EnableGear = cbx_gear.IsChecked.Value;
+                    currentProfile.GearDown = Convert.ToInt32(tbx_gearDown.Text);
+                    currentProfile.GearUp = Convert.ToInt32(tbx_gearUp.Text);
+                    currentProfile.Voice = rb_rita.IsChecked.Value ? VoiceTemplate.RU_Rita : VoiceTemplate.US_Betty;
+
+                    Settings.Save();
+                }
             }
             catch (Exception ex)
             {
@@ -405,33 +437,13 @@ namespace wt_betty
         {
             try
             {
-                User.Default.EnableG = true;
-                User.Default.GForce = 6;
-                User.Default.EnableA = true;
-                User.Default.AoA = 12;
-                User.Default.EnablePullUp = true;
-                User.Default.EnableFuel = true;
-                User.Default.EnableGear = true;
-                User.Default.EnableOverSpeed = true;
-                User.Default.OverSpeed = 820;
-                User.Default.GearDown = 270;
-                User.Default.GearUp = 290;
-                User.Default.VoiceTemplate = (int) Entities.VoiceTemplate.US_Betty;
-                User.Default.Save();
-
-                cbx_g.IsChecked = User.Default.EnableG;
-                slider_G.Value = Convert.ToDouble(User.Default.GForce);
-                textBox_gSlider.Text = slider_G.Value.ToString();
-                cbx_a.IsChecked = User.Default.EnableA;
-                slider_A.Value = Convert.ToDouble(User.Default.AoA);
-                tbx_overSpeed.Text = User.Default.OverSpeed.ToString();
-                cbx_overSpeed.IsChecked = User.Default.EnableOverSpeed;
-                textBox_aSlider.Text = slider_A.Value.ToString();
-                cbx_pullup.IsChecked = User.Default.EnablePullUp;
-                cbx_fuel.IsChecked = User.Default.EnableFuel;
-                cbx_gear.IsChecked = User.Default.EnableGear;
-                tbx_gearDown.Text = User.Default.GearDown.ToString();
-                tbx_gearUp.Text = User.Default.GearUp.ToString();
+                var currentProfile = CurrentProfile;
+                if (currentProfile != null)
+                {
+                    currentProfile.Reset();
+                    Settings.Save();
+                    UpdateProfileUI(currentProfile);
+                }
             }
             catch (Exception ex)
             {

@@ -16,7 +16,7 @@ namespace wt_betty.Entities
         RU_Rita
     }
 
-    public abstract class VoiceMessageProcessor : IDisposable
+    public abstract class VoiceProcessor : IDisposable
     {
         private bool m_Disposed;
         private readonly BlockingCollection<SoundMessage> m_MessagesQueue = new BlockingCollection<SoundMessage>();
@@ -39,7 +39,25 @@ namespace wt_betty.Entities
         protected SoundMessage MsgGearUp { get; set; }
         protected SoundMessage MsgGearDown { get; set; }
         protected SoundMessage MsgSinkRate { get; set; }
+
+        protected List<SoundMessage> SupportedMessages { get; private set; } = new List<SoundMessage>();
         #endregion
+
+        protected VoiceProcessor()
+        {
+            SupportedMessages.AddRange(new SoundMessage[] {
+                MsgBingoFuel
+                , MsgAoAMaximum
+                , MsgAoAOverLimit
+                , MsgGMaximum
+                , MsgGOverLimit
+                , MsgPullUp
+                , MsgOverspeed
+                , MsgGearUp
+                , MsgGearDown
+                , MsgSinkRate
+            });
+        }
 
         #region disposing
         public void Dispose()
@@ -64,16 +82,8 @@ namespace wt_betty.Entities
                     SoundMsgStart?.Dispose();
                     SoundMsgEnd?.Dispose();
 
-                    MsgBingoFuel?.Dispose();
-                    MsgAoAMaximum?.Dispose();
-                    MsgAoAOverLimit?.Dispose();
-                    MsgGMaximum?.Dispose();
-                    MsgGOverLimit?.Dispose();
-                    MsgPullUp?.Dispose();
-                    MsgOverspeed?.Dispose();
-                    MsgGearUp?.Dispose();
-                    MsgGearDown?.Dispose();
-                    MsgSinkRate?.Dispose();
+                    foreach (var msg in SupportedMessages)
+                        msg?.Dispose();
                 }
                 m_Disposed = true;
             }

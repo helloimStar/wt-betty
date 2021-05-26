@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace wt_betty.Entities
 {
-    public sealed class BettyProcessor : VoiceMessageProcessor
+    public sealed class BettyVoiceProcessor : VoiceProcessor
     {
-        public BettyProcessor()
+        public static readonly BettyVoiceProcessor Instance = new BettyVoiceProcessor();
+
+        private BettyVoiceProcessor()
         {
             MsgBingoFuel = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.Bingo) };
             MsgAoAMaximum = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.MaximumAngleOfAttack) };
