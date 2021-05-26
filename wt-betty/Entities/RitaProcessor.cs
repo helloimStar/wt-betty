@@ -7,11 +7,19 @@ using System.Threading.Tasks;
 
 namespace wt_betty.Entities
 {
-    class RitaProcessor : IVoiceMessageProcessor
+    public sealed class RitaProcessor : VoiceMessageProcessor
     {
-        RitaProcessor()
+        public RitaProcessor()
         {
-            MsgAoAMaximum = new SoundMessage() { Sound = new SoundPlayer() }
+            MsgBingoFuel = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_Bingo) };
+            MsgAoAMaximum = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_MaximumAngleOfAttack) };
+            MsgAoAOverLimit = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_AngleOfAttackOverLimit), Looped = true, PlayInOut = false };
+            MsgGMaximum = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_GOverLimit) };
+            MsgGOverLimit = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_GOverLimit), Looped = true, PlayInOut = false };
+            MsgPullUp = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_PullUp) };
+            MsgOverspeed = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_MaximumSpeed) };
+            MsgGearUp = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_GearUp) };
+            MsgGearDown = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_GearDown) };
         }
     }
 }

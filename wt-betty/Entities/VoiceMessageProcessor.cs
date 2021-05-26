@@ -16,7 +16,7 @@ namespace wt_betty.Entities
         RU_Rita
     }
 
-    public abstract class IVoiceMessageProcessor
+    public abstract class VoiceMessageProcessor
     {
         private SoundMessage m_Current;
         private readonly BlockingCollection<SoundMessage> m_MessagesQueue = new BlockingCollection<SoundMessage>();

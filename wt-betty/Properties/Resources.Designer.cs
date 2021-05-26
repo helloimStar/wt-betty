@@ -252,6 +252,15 @@ namespace wt_betty.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
         /// </summary>
+        internal static System.IO.UnmanagedMemoryStream RITA_PullUp {
+            get {
+                return ResourceManager.GetStream("RITA_PullUp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
         internal static System.IO.UnmanagedMemoryStream RITA_WarningWarning {
             get {
                 return ResourceManager.GetStream("RITA_WarningWarning", resourceCulture);
