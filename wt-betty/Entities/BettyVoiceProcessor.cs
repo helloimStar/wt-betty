@@ -14,7 +14,7 @@ namespace wt_betty.Entities
         private BettyVoiceProcessor()
         {
             MsgBingoFuel = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.Bingo) };
-            MsgAoAMaximum = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.MaximumAngleOfAttack) };
+            MsgAoAMaximum = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.MaximumAngleOfAttack), Looped = true, PlayInOut = false };
             MsgAoAOverLimit = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.AngleOfAttackOverLimit), Looped = true, PlayInOut = false };
             MsgGMaximum = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.OverG) };
             MsgGOverLimit = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.GOverLimit), Looped = true, PlayInOut = false };

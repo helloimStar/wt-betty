@@ -103,33 +103,41 @@ namespace wt_betty.Entities
 
             m_ProcessingTask = Task.Factory.StartNew(() =>
             {
-                while (!m_MessagesQueue.IsAddingCompleted && !m_CancellationToken.IsCancellationRequested)
+                try
                 {
-                    if (m_MessagesQueue.Count() > 0)
+                    while (!m_MessagesQueue.IsAddingCompleted && !m_CancellationToken.IsCancellationRequested)
                     {
-                        bool playInOut = false;
-                        foreach (var msgToPlay in m_MessagesQueue.GetConsumingEnumerable(m_CancellationToken.Token))
+                        if (m_MessagesQueue.Count() > 0)
                         {
-                            if (msgToPlay.Actual)
+                            bool playInOut = false;
+                            foreach (var msgToPlay in m_MessagesQueue.GetConsumingEnumerable(m_CancellationToken.Token))
                             {
-                                m_Current = msgToPlay;
-                                if (!playInOut)
-                                    playInOut = msgToPlay.PlayInOut;
+                                if (msgToPlay.Actual)
+                                {
+                                    m_Current = msgToPlay;
+                                    if (!playInOut)
+                                        playInOut = msgToPlay.PlayInOut;
 
-                                if (playInOut)
-                                    SoundMsgStart?.PlaySync();
+                                    if (playInOut)
+                                        SoundMsgStart?.PlaySync();
 
-                                msgToPlay.Play();
-                                m_Current = null;
+                                    msgToPlay.Play();
+                                    m_Current = null;
+                                }
                             }
+                            if (playInOut)
+                                SoundMsgEnd?.PlaySync();
                         }
-                        if (playInOut)
-                            SoundMsgEnd?.PlaySync();
+                        else if (!m_CancellationToken.IsCancellationRequested)
+                            Thread.Sleep(100);
+                        else
+                            return;
                     }
-                    else if (!m_CancellationToken.IsCancellationRequested)
-                        Thread.Sleep(100);
-                    else
-                        return;
+                }
+                catch (ThreadInterruptedException) { /*ignored*/}
+                catch (Exception e)
+                {
+                    Start();
                 }
 
             }, m_CancellationToken.Token);
@@ -157,8 +165,6 @@ namespace wt_betty.Entities
             if (msg != null)
             {
                 msg.Actual = false;
-                //do not interrupt if is playing now
-                //msg.Stop();
             }
         }
 
@@ -175,25 +181,29 @@ namespace wt_betty.Entities
 
         public void AoAMaximum(bool actual = true)
         {
-            CancelMsg(MsgAoAOverLimit);
+            if (actual)
+                CancelMsg(MsgAoAOverLimit);
             ProcessMsg(MsgAoAMaximum, actual);
         }
 
         public void AoAOverLimit(bool actual = true)
         {
-            CancelMsg(MsgAoAMaximum);
+            if (actual)
+                CancelMsg(MsgAoAMaximum);
             ProcessMsg(MsgAoAOverLimit, actual);
         }
 
         public void GMaximum(bool actual = true)
         {
-            CancelMsg(MsgGOverLimit);
+            if (actual)
+                CancelMsg(MsgGOverLimit);
             ProcessMsg(MsgGMaximum, actual);
         }
 
         public void GOverLimit(bool actual = true)
         {
-            CancelMsg(MsgGMaximum);
+            if (actual)
+                CancelMsg(MsgGMaximum);
             ProcessMsg(MsgGOverLimit, actual);
         }
 
@@ -213,7 +223,24 @@ namespace wt_betty.Entities
             internal bool PlayInOut { get; set; } = true;
 
             //Is this message actual for current flight data or should be ignored in queue
-            internal bool Actual { get; set; } = true;
+            private bool m_Actual = true;
+            internal bool Actual
+            {
+                get => m_Actual;
+                set
+                {
+                    m_Actual = value;
+                    if (!m_Actual)
+                    {
+                        if (Looped)
+                            Stop();
+                        else
+                            IsPlaying = false;
+                    }
+                }
+            }
+
+            private bool IsPlaying { get; set; }
 
             public void Dispose()
             {
@@ -236,15 +263,26 @@ namespace wt_betty.Entities
 
             public void Play()
             {
-                if (Looped)
-                    Sound?.PlayLooping();
-                else
-                    Sound?.PlaySync();
+                if (!IsPlaying)
+                {
+                    IsPlaying = true;
+                    if (Looped)
+                        Sound?.PlayLooping();
+                    else
+                    {
+                        Sound?.PlaySync();
+                        IsPlaying = false;
+                    }
+                }
             }
 
             public void Stop()
             {
-                Sound?.Stop();
+                if (IsPlaying)
+                {
+                    Sound?.Stop();
+                    IsPlaying = false;
+                }
             }            
         }
     }

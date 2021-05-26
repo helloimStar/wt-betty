@@ -175,7 +175,7 @@ namespace wt_betty
                 var currentAircraft = CurrentAircraft;
                 if (currentAircraft != null)
                 {
-                    var currentProfile = Settings.Profiles[currentAircraft] ?? Settings.Default;
+                    var currentProfile = Settings.Profiles.ContainsKey(currentAircraft) ? Settings.Profiles[currentAircraft] : Settings.Default;
                     CurrentProfile = currentProfile;
 
                     decimal G = Convert.ToDecimal(myState.Ny, culture);
