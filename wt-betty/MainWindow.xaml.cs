@@ -265,6 +265,8 @@ namespace wt_betty
             rb_betty.IsChecked = voice == VoiceTemplate.US_Betty;
             rb_rita.IsChecked = voice == VoiceTemplate.RU_Rita;
 
+            button_remove.IsEnabled = profile != Settings.Default;
+
             VoiceProcessor?.Stop();
             VoiceProcessor = VoiceProcessorFactory.GetProcessor(voice);
             VoiceProcessor?.Start();
@@ -327,6 +329,7 @@ namespace wt_betty
 
                         if (!string.IsNullOrEmpty(currentAircraft) && !Settings.Profiles.ContainsKey(currentAircraft))
                         {
+                            //is there any way to omit MessageBox usage?
                             var result = CustomMessageBox.ShowYesNoCancel(string.Format("Aircraft {0} profile not found. Would you like to create it or update default profile?", currentAircraft)
                                 , "Select action"
                                 , "Create new"
@@ -382,6 +385,7 @@ namespace wt_betty
             }
             catch (Exception ex)
             {
+                //is there any way to omit MessageBox usage?
                 MessageBox.Show(ex.Message);
             }
         }
@@ -400,6 +404,7 @@ namespace wt_betty
             }
             catch (Exception ex)
             {
+                //is there any way to omit MessageBox usage?
                 MessageBox.Show(ex.Message);
             }
         }
@@ -414,6 +419,26 @@ namespace wt_betty
         private void cmb_profile_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             UpdateProfileUI(CurrentProfile);
+        }
+
+        private void button_remove_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var toRemove = CurrentProfile;
+                if (toRemove != null && toRemove != Settings.Default)
+                {
+                    CurrentProfile = Settings.Default;
+                    Settings.Profiles.Remove(toRemove.Name);
+
+                    Settings.Save();
+                }
+            }
+            catch (Exception ex)
+            {
+                //is there any way to omit MessageBox usage?
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 
