@@ -45,8 +45,12 @@ namespace wt_betty
                 var oldValue = CurrentProfile;
 
                 if (profile != oldValue) {
-                    cmb_profile.SelectedItem = profile;
-                    UpdateProfileUI(profile);
+                    UpdateUIThreadSafe(() =>
+                    {
+
+                        cmb_profile.SelectedItem = profile;
+                        UpdateProfileUI(profile);
+                    });
                 }
             }
         }
@@ -96,7 +100,8 @@ namespace wt_betty
         {
             var connectionArgs = e as ConnectionEventArgs;
             bool connected = connectionArgs.Connected;
-            tbx_msgs.Text = (connected  ? "Running" : "Connection failed");
+
+            UpdateUIThreadSafe(() => tbx_msgs.Text = (connected ? "Running" : "Connection failed"));
         }
 
         private void OnStateUpdated(object sender, EventArgs e)
@@ -105,7 +110,7 @@ namespace wt_betty
             if (stateArgs.ErrorDetails == null)
                 UpdateData(stateArgs.Indicator, stateArgs.State);
             else
-                tbx_msgs.Text = stateArgs.ErrorDetails;
+                UpdateUIThreadSafe(() => tbx_msgs.Text = stateArgs.ErrorDetails);
         }
         
         private void UpdateData(Indicator indicator, State state)
@@ -139,7 +144,7 @@ namespace wt_betty
                     label.Content = myIndicator.type;
 
                     //BINGO FUEL
-                    if (cbx_fuel.IsChecked == true)
+                    if (currentProfile.EnableFuel)
                     {
                         bool bingoFuel = Fuel / FuelFull < 103 && Fuel / FuelFull > 100 && Throttle > 0;
                         VoiceProcessor.BingoFuel(bingoFuel);
@@ -147,7 +152,7 @@ namespace wt_betty
                     
 
                     //STALL WARNING
-                    if (cbx_a.IsChecked == true)
+                    if (currentProfile.EnableAoA)
                     {
                         bool stallWarning = AoA > Convert.ToDecimal(currentProfile.AoA * 0.8) && AoA < currentProfile.AoA + 10 && (myIndicator.gears_lamp == "1" || IAS > 100);
                         if (stallWarning)
@@ -165,7 +170,7 @@ namespace wt_betty
                     }
                     
                     //G OVERLOAD
-                    if (cbx_g.IsChecked == true)
+                    if (currentProfile.EnableG)
                     {
                         bool gOverload = G > currentProfile.GForce || (double)G < -0.4 * currentProfile.GForce;
                         if (gOverload)
@@ -184,14 +189,14 @@ namespace wt_betty
 
                     //PULL UP Ground/sea level Proximity Warning
                     //desirable to have about 3 seconds before crash
-                    if (cbx_pullup.IsChecked == true)
+                    if (currentProfile.EnablePullUp)
                     {
                         bool pullUp = 0 - Vspeed * (2 + (decimal)Math.Pow(IAS / 100, 0.7)) > Alt;
                         VoiceProcessor.PullUp(pullUp);
                     }
 
                     //Overspeed
-                    if (cbx_overSpeed.IsChecked == true)
+                    if (currentProfile.EnableOverSpeed)
                     {
                         bool overSpeed = IAS > currentProfile.OverSpeed;
                         VoiceProcessor.Overspeed(overSpeed);
@@ -237,7 +242,7 @@ namespace wt_betty
             }
             catch (Exception ex)
             {
-                tbx_msgs.Text = ex.Message;
+                UpdateUIThreadSafe(() => tbx_msgs.Text = ex.Message);
             }
         }
 
@@ -263,6 +268,14 @@ namespace wt_betty
             VoiceProcessor?.Stop();
             VoiceProcessor = VoiceProcessorFactory.GetProcessor(voice);
             VoiceProcessor?.Start();
+        }
+
+        private void UpdateUIThreadSafe(Action action)
+        {
+            if (!Dispatcher.CheckAccess())
+                Dispatcher.BeginInvoke(action);
+            else
+                action();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

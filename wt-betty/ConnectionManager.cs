@@ -41,6 +41,8 @@ namespace wt_betty
                 OnConnectionChanged?.Invoke(this, new ConnectionEventArgs() { Connected = m_Connected });
             }
         }
+
+        private Task m_Worker;
         private CancellationTokenSource m_CancellationTokenSource;
         private Task m_CheckConnectionTask, m_GetDataTask;
         
@@ -52,58 +54,65 @@ namespace wt_betty
             if (!Running)
             {
                 m_CancellationTokenSource = new CancellationTokenSource();
-                List<Task> waitForEndList = new List<Task>();
-                if (m_CheckConnectionTask != null && !m_CheckConnectionTask.IsCompleted)
-                    waitForEndList.Add(m_CheckConnectionTask);
-                if (m_GetDataTask != null && !m_GetDataTask.IsCompleted)
-                    waitForEndList.Add(m_GetDataTask);
 
-                m_CheckConnectionTask = RepeatableTask.Run(() =>
+                var oldWorker = m_Worker;
+                m_Worker = Task.Run(() =>
                 {
-                    if (waitForEndList != null)
-                        Task.WaitAll(waitForEndList.ToArray());
-                    waitForEndList = null;
+                    List<Task> waitForEndList = new List<Task>();
+                    if (oldWorker != null && !oldWorker.IsCompleted)
+                        waitForEndList.Add(oldWorker);
+                    if (m_CheckConnectionTask != null && !m_CheckConnectionTask.IsCompleted)
+                        waitForEndList.Add(m_CheckConnectionTask);
+                    if (m_GetDataTask != null && !m_GetDataTask.IsCompleted)
+                        waitForEndList.Add(m_GetDataTask);
 
-                    if (!Connected)
+                    m_CheckConnectionTask = RepeatableTask.Run(() =>
                     {
-                        try
-                        {
-                            TcpClient connectionTest = new TcpClient("localhost", 8111);
-                            connectionTest.Close();
-                            Connected = true;
-                        }
-                        catch (Exception e)
-                        {
-                            Connected = false;
-                        }
-                    }
-                }, new TimeSpan(0, 0, 5), m_CancellationTokenSource.Token);
+                        if (waitForEndList != null)
+                            Task.WaitAll(waitForEndList.ToArray());
+                        waitForEndList = null;
 
-                m_GetDataTask = RepeatableTask.Run(() =>
-                {
-                    if (Connected)
-                    {
-                        try
+                        if (!Connected)
                         {
-                            var indicator = JsonSerializer._download_serialized_json_data<Indicator>(URL_INDICATORS);
-                            var state = JsonSerializer._download_serialized_json_data<State>(URL_STATES);
-
-                            bool dataIsValid = state != null && indicator != null;
-                            if (dataIsValid)
+                            try
                             {
-                                dataIsValid = state.valid == "true" && indicator.valid == "true";
-                                OnStateUpdated?.Invoke(this, new StateEventArgs() { Indicator = indicator, State = state });
+                                TcpClient connectionTest = new TcpClient("localhost", 8111);
+                                connectionTest.Close();
+                                Connected = true;
                             }
-                            else
+                            catch (Exception e)
+                            {
                                 Connected = false;
+                            }
                         }
-                        catch (Exception e)
+                    }, new TimeSpan(0, 0, 5), m_CancellationTokenSource.Token);
+
+                    m_GetDataTask = RepeatableTask.Run(() =>
+                    {
+                        if (Connected)
                         {
-                            OnStateUpdated?.Invoke(this, new StateEventArgs() { ErrorDetails = e.Message });
-                            Connected = false;
+                            try
+                            {
+                                var indicator = JsonSerializer._download_serialized_json_data<Indicator>(URL_INDICATORS);
+                                var state = JsonSerializer._download_serialized_json_data<State>(URL_STATES);
+
+                                bool dataIsValid = state != null && indicator != null;
+                                if (dataIsValid)
+                                {
+                                    dataIsValid = state.valid == "true" && indicator.valid == "true";
+                                    OnStateUpdated?.Invoke(this, new StateEventArgs() { Indicator = indicator, State = state });
+                                }
+                                else
+                                    Connected = false;
+                            }
+                            catch (Exception e)
+                            {
+                                OnStateUpdated?.Invoke(this, new StateEventArgs() { ErrorDetails = e.Message });
+                                Connected = false;
+                            }
                         }
-                    }
-                }, DATA_UPDATE_TIMEOUT, m_CancellationTokenSource.Token);
+                    }, DATA_UPDATE_TIMEOUT, m_CancellationTokenSource.Token);
+                }, m_CancellationTokenSource.Token);
             }
         }
 
