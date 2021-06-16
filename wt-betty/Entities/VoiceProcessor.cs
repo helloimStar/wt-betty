@@ -329,7 +329,7 @@ namespace wt_betty.Entities
             {
                 if (Actual)
                     Actual = false;
-                else if (IsPlaying)
+                else
                 {
                     m_Audio?.Stop();
                     m_Audio?.FlushSourceBuffers();
