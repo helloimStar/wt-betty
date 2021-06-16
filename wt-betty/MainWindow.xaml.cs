@@ -42,16 +42,17 @@ namespace wt_betty
             set
             {
                 var profile = value;
-                var oldValue = CurrentProfile;
-
-                if (profile != oldValue) {
-                    UpdateUIThreadSafe(() =>
+                UpdateUIThreadSafe(() =>
+                {
+                    var oldValue = CurrentProfile;
+                    if (profile != oldValue)
                     {
-
                         cmb_profile.SelectedItem = profile;
                         UpdateProfileUI(profile);
-                    });
-                }
+                    }
+                });
+
+                
             }
         }
         private string CurrentAircraft
@@ -141,7 +142,7 @@ namespace wt_betty
                     //tbx_msgs.Text = myState.AoS;
                     decimal AoS = Convert.ToDecimal(myState.AoS, culture);
                     int TAS = Convert.ToInt32(myState.TAS, culture);
-                    label.Content = myIndicator.type;
+                    UpdateUIThreadSafe(() => label.Content = myIndicator.type);
 
                     //BINGO FUEL
                     if (currentProfile.EnableFuel)
