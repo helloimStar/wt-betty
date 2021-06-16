@@ -14,14 +14,31 @@ namespace wt_betty.Entities
         private RitaVoiceProcessor()
         {
             MsgBingoFuel = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_Bingo) };
+            SupportedMessages.Add(MsgBingoFuel);
+
             MsgAoAMaximum = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_MaximumAngleOfAttack) };
-            MsgAoAOverLimit = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_AngleOfAttackOverLimit), Looped = true, PlayInOut = false };
+            SupportedMessages.Add(MsgAoAMaximum);
+
+            MsgAoAOverLimit = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_AngleOfAttackOverLimit), Background = true, PlayInOut = false };
+            SupportedMessages.Add(MsgAoAOverLimit);
+
             MsgGMaximum = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_GOverLimit) };
-            MsgGOverLimit = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_GOverLimit), Looped = true, PlayInOut = false };
+            SupportedMessages.Add(MsgGMaximum);
+
+            MsgGOverLimit = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_GOverLimit) };
+            SupportedMessages.Add(MsgGOverLimit);
+
             MsgPullUp = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_PullUp) };
+            SupportedMessages.Add(MsgPullUp);
+
             MsgOverspeed = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_MaximumSpeed) };
+            SupportedMessages.Add(MsgOverspeed);
+
             MsgGearUp = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_GearUp) };
+            SupportedMessages.Add(MsgGearUp);
+
             MsgGearDown = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.RITA_GearDown) };
+            SupportedMessages.Add(MsgGearDown);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using SharpDX.Multimedia;
+using SharpDX.XAudio2;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -18,9 +20,13 @@ namespace wt_betty.Entities
 
     public abstract class VoiceProcessor : IDisposable
     {
+
         private bool m_Disposed;
         private readonly BlockingCollection<SoundMessage> m_MessagesQueue = new BlockingCollection<SoundMessage>();
-        
+
+        private readonly XAudio2 m_Device;
+        private readonly MasteringVoice m_MasteringVoice;
+
         private Task m_ProcessingTask;
         private CancellationTokenSource m_CancellationToken;
         private SoundMessage m_Current;
@@ -45,20 +51,10 @@ namespace wt_betty.Entities
 
         protected VoiceProcessor()
         {
-            SupportedMessages.AddRange(new SoundMessage[] {
-                MsgBingoFuel
-                , MsgAoAMaximum
-                , MsgAoAOverLimit
-                , MsgGMaximum
-                , MsgGOverLimit
-                , MsgPullUp
-                , MsgOverspeed
-                , MsgGearUp
-                , MsgGearDown
-                , MsgSinkRate
-            });
+            m_Device = new XAudio2();
+            m_MasteringVoice = new MasteringVoice(m_Device);
         }
-
+        
         #region disposing
         public void Dispose()
         {
@@ -84,6 +80,9 @@ namespace wt_betty.Entities
 
                     foreach (var msg in SupportedMessages)
                         msg?.Dispose();
+
+                    m_MasteringVoice.Dispose();
+                    m_Device.Dispose();
                 }
                 m_Disposed = true;
             }
@@ -100,6 +99,8 @@ namespace wt_betty.Entities
 
             m_CancellationToken?.Dispose();
             m_CancellationToken = new CancellationTokenSource();
+            foreach (var msg in SupportedMessages)
+                msg.m_Device = m_Device;
 
             m_ProcessingTask = Task.Factory.StartNew(() =>
             {
@@ -122,22 +123,21 @@ namespace wt_betty.Entities
                                         SoundMsgStart?.PlaySync();
 
                                     msgToPlay.Play();
-                                    if (!msgToPlay.Looped)
-                                        m_Current = null;
+                                    m_Current = null;
                                 }
                             }
                             if (playInOut)
                                 SoundMsgEnd?.PlaySync();
                         }
                         else if (!m_CancellationToken.IsCancellationRequested)
-                            Thread.Sleep(100);
+                            continue;
                         else
                             return;
                     }
                 }
                 catch (ThreadInterruptedException) { /*ignored*/}
                 catch (OperationCanceledException) { /*ignored*/}
-                catch (Exception e)
+                catch (Exception)
                 {
                     if (!m_CancellationToken.IsCancellationRequested)
                         Start();
@@ -158,18 +158,17 @@ namespace wt_betty.Entities
             if (msg != null)
             {
                 msg.Actual = true;
-                if (msg.Equals(m_Current))
-                    return;
-                m_MessagesQueue.Add(msg);
+                if (msg.Background)
+                    msg.Play();
+                else
+                    m_MessagesQueue.Add(msg);
             }
         }
 
         private void CancelMsg(SoundMessage msg)
         {
             if (msg != null)
-            {
                 msg.Actual = false;
-            }
         }
 
         private void ProcessMsg(SoundMessage msg, bool actual)
@@ -221,10 +220,17 @@ namespace wt_betty.Entities
         protected class SoundMessage : IDisposable
         {
             private bool m_Disposed;
+            private SourceVoice m_Audio;
+            private SoundStream m_SoundStream;
+            private AudioBuffer m_AudioBuffer;
+            private CountdownEvent m_PlaySync = new CountdownEvent(1);
+
+            internal XAudio2 m_Device { get; set; }
 
             internal SoundPlayer Sound { get; set; }
-            internal bool Looped { get; set; }
+            internal bool Background { get; set; }
             internal bool PlayInOut { get; set; } = true;
+            internal bool Loaded => m_Audio != null;
 
             //Is this message actual for current flight data or should be ignored in queue
             private bool m_Actual = true;
@@ -235,16 +241,47 @@ namespace wt_betty.Entities
                 {
                     m_Actual = value;
                     if (!m_Actual)
-                    {
-                        if (Looped)
-                            Stop();
-                        else
-                            IsPlaying = false;
-                    }
+                        Stop();
                 }
             }
 
             private bool IsPlaying { get; set; }
+
+            internal SoundMessage()
+            {
+            }
+
+            private void Load()
+            {
+                m_SoundStream = new SoundStream(Sound.Stream);
+                var waveFormat = m_SoundStream.Format;
+
+                m_AudioBuffer = new AudioBuffer
+                {
+                    Stream = m_SoundStream.ToDataStream(),
+                    AudioBytes = (int)m_SoundStream.Length,
+                    Flags = BufferFlags.EndOfStream
+                };
+                m_SoundStream.Close();
+
+                m_Audio = new SourceVoice(m_Device, waveFormat, true);
+                m_Audio.BufferEnd += (context) =>
+                {
+                    if (Background)
+                    {
+                        if (Actual)
+                        {
+                            m_Audio.SubmitSourceBuffer(m_AudioBuffer, m_SoundStream.DecodedPacketsInfo);
+                            m_Audio.Start();
+                        }
+                    }
+                    else
+                    {
+                        m_PlaySync.Signal();
+                        IsPlaying = false;
+                    }
+                };
+            }
 
             public void Dispose()
             {
@@ -259,7 +296,12 @@ namespace wt_betty.Entities
                     if (disposing)
                     {
                         Stop();
+                        m_Audio.DestroyVoice();
+                        m_Audio.Dispose();
+                        m_AudioBuffer.Stream.Dispose();
+
                         Sound?.Dispose();
+                        m_Device = null;
                     }
                     m_Disposed = true;
                 }
@@ -270,21 +312,27 @@ namespace wt_betty.Entities
                 if (!IsPlaying)
                 {
                     IsPlaying = true;
-                    if (Looped)
-                        Sound?.PlayLooping();
-                    else
-                    {
-                        Sound?.PlaySync();
-                        IsPlaying = false;
-                    }
+                    if (!Loaded)
+                        Load();
+
+                    if (!Background)
+                        m_PlaySync.Reset();
+
+                    m_Audio.SubmitSourceBuffer(m_AudioBuffer, m_SoundStream.DecodedPacketsInfo);
+                    m_Audio.Start();
+                    if (!Background)
+                        m_PlaySync.Wait();
                 }
             }
 
             public void Stop()
             {
-                if (IsPlaying)
+                if (Actual)
+                    Actual = false;
+                else if (IsPlaying)
                 {
-                    Sound?.Stop();
+                    m_Audio?.Stop();
+                    m_Audio?.FlushSourceBuffers();
                     IsPlaying = false;
                 }
             }            
