@@ -25,7 +25,7 @@ namespace wt_betty.Entities
             MsgGMaximum = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.OverG) };
             SupportedMessages.Add(MsgGMaximum);
 
-            MsgGOverLimit = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.GOverLimit), Background = true, PlayInOut = false };
+            MsgGOverLimit = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.GOverLimit) };
             SupportedMessages.Add(MsgGOverLimit);
 
             MsgPullUp = new SoundMessage() { Sound = new SoundPlayer(Properties.Resources.PullUp) };
