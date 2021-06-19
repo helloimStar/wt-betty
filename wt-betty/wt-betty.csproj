@@ -115,10 +115,13 @@
     </ApplicationDefinition>
     <Compile Include="Entities\DataModel.cs" />
     <Compile Include="Entities\BettyVoiceProcessor.cs" />
+    <Compile Include="Entities\MessagesQueue.cs" />
     <Compile Include="Entities\RitaVoiceProcessor.cs" />
     <Compile Include="Entities\Settings.cs" />
+    <Compile Include="Entities\SoundMessage.cs" />
     <Compile Include="Entities\VoiceProcessor.cs" />
     <Compile Include="Entities\VoiceProcessorFactory.cs" />
+    <Compile Include="Entities\VoiceTemplate.cs" />
     <Compile Include="JsonSerializer.cs" />
     <Compile Include="Entities\AircraftProfile.cs" />
     <Compile Include="ConnectionManager.cs" />

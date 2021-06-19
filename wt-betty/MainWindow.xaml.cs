@@ -176,10 +176,10 @@ namespace wt_betty
                         bool gOverload = G > currentProfile.GForce || (double)G < -0.4 * currentProfile.GForce;
                         if (gOverload)
                         {
-                            if (G > currentProfile.GForce + 3 - currentProfile.GForce / (decimal)3)
-                                VoiceProcessor.GMaximum();
-                            else
+                            if (G > currentProfile.GForce * (decimal)1.2)
                                 VoiceProcessor.GOverLimit();
+                            else
+                                VoiceProcessor.GMaximum();
                         }
                         else
                         {
