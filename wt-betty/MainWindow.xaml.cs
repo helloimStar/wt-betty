@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using WPFCustomMessageBox;
 using System.Collections.ObjectModel;
 using System.Threading;
+using System.Linq;
+using System.Reflection;
 
 namespace wt_betty
 {
@@ -32,6 +34,8 @@ namespace wt_betty
         CultureInfo culture = new CultureInfo("en-US");
         FlowDocument myFlowDoc = new FlowDocument();
         Paragraph par = new Paragraph();
+
+        Queue<KeyValuePair<DateTime, int>> FuelTimeMonitor = new Queue<KeyValuePair<DateTime, int>>();
 
         private ConnectionManager m_ConnectionManager = new ConnectionManager();
         private Settings Settings { get => Settings.Instance; }
@@ -122,10 +126,17 @@ namespace wt_betty
                 myState = state;
 
                 var currentAircraft = CurrentAircraft;
+
+                string monitorMessage = "";
+
+
                 if (currentAircraft != null)
                 {
                     var currentProfile = Settings.Profiles.ContainsKey(currentAircraft) ? Settings.Profiles[currentAircraft] : Settings.Default;
                     CurrentProfile = currentProfile;
+
+
+
 
                     decimal G = Convert.ToDecimal(myState.Ny, culture);
                     decimal AoA = Convert.ToDecimal(myState.AoA, culture);
@@ -144,13 +155,68 @@ namespace wt_betty
                     int TAS = Convert.ToInt32(myState.TAS, culture);
                     UpdateUIThreadSafe(() => label.Content = myIndicator.type);
 
+
+                    //Monitoring
+                    if (currentProfile.Monitoring == "")
+                    {
+                        monitorMessage = "";
+                    }
+                    else if (currentProfile.Monitoring == "G-Force")
+                    {
+                        monitorMessage = G.ToString();
+                    }
+                    else if (currentProfile.Monitoring == "AoA")
+                    {
+                        monitorMessage = AoA.ToString();
+                    }
+                    else if (currentProfile.Monitoring == "Speed")
+                    {
+                        monitorMessage = IAS.ToString();
+                    }
+                    else if (currentProfile.Monitoring == "Fuel Time")
+                    {
+                        //int queueLength = 25;
+
+                        //KeyValuePair<DateTime, int> newDataPoint = new KeyValuePair<DateTime, int>(DateTime.Now, (int)(Fuel / FuelFull));
+                        //FuelTimeMonitor.Enqueue(newDataPoint);
+
+                        //if (FuelTimeMonitor.Count == queueLength)
+                        //{
+                        //    KeyValuePair<DateTime, int> oldDataPoint = FuelTimeMonitor.Dequeue();
+                        //    double timeElapsed = (newDataPoint.Key - oldDataPoint.Key).TotalSeconds;
+                        //    int fuelUsed = oldDataPoint.Value - newDataPoint.Value;
+
+                        //    double secondsPerFuel = timeElapsed / fuelUsed;
+                        //    double fuelTimeRemaining = secondsPerFuel * newDataPoint.Value;
+
+                        //    TimeSpan timeSpan = TimeSpan.FromSeconds(fuelTimeRemaining);
+                        //    string formattedTime = timeSpan.ToString("mm\\:ss");
+                        //    monitorMessage = formattedTime;
+                        //}
+                        //else
+                        //{
+                        //    monitorMessage = "...";
+                        //    while (FuelTimeMonitor.Count > queueLength)
+                        //    {
+                        //        FuelTimeMonitor.Dequeue();
+                        //    }
+                        //}
+
+                    }
+                    else
+                    {
+                        monitorMessage = "hmmmmmmm";
+                    }
+
+                    UpdateUIThreadSafe(() => label_monitoring.Content = monitorMessage);
+
+
                     //BINGO FUEL
                     if (currentProfile.EnableFuel)
                     {
-                        bool bingoFuel = Fuel / FuelFull < 103 && Fuel / FuelFull > 100 && Throttle > 0;
+                        bool bingoFuel = Fuel / FuelFull < 105 && Fuel / FuelFull > 100 && Throttle > 0;
                         VoiceProcessor.BingoFuel(bingoFuel);
                     }
-                    
 
                     //STALL WARNING
                     if (currentProfile.EnableAoA)
@@ -243,6 +309,8 @@ namespace wt_betty
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine(ex);
+
                 UpdateUIThreadSafe(() => tbx_msgs.Text = ex.Message);
             }
         }
@@ -265,6 +333,7 @@ namespace wt_betty
             var voice = profile.Voice;
             rb_betty.IsChecked = voice == VoiceTemplate.US_Betty;
             rb_rita.IsChecked = voice == VoiceTemplate.RU_Rita;
+            cmb_Monitoring.SelectedValue = Convert.ToString(profile.Monitoring);
 
             button_remove.IsEnabled = profile != Settings.Default;
 
@@ -355,7 +424,8 @@ namespace wt_betty
                                         EnableGear = cbx_gear.IsChecked.Value,
                                         GearDown = Convert.ToInt32(tbx_gearDown.Text),
                                         GearUp = Convert.ToInt32(tbx_gearUp.Text),
-                                        Voice = rb_rita.IsChecked.Value ? VoiceTemplate.RU_Rita : VoiceTemplate.US_Betty
+                                        Voice = rb_rita.IsChecked.Value ? VoiceTemplate.RU_Rita : VoiceTemplate.US_Betty,
+                                        Monitoring = cmb_Monitoring.Text
                                     };
                                     Settings.Profiles.Add(currentAircraft, newProfile);
                                     Profiles.Add(newProfile);
@@ -380,6 +450,7 @@ namespace wt_betty
                     currentProfile.GearDown = Convert.ToInt32(tbx_gearDown.Text);
                     currentProfile.GearUp = Convert.ToInt32(tbx_gearUp.Text);
                     currentProfile.Voice = rb_rita.IsChecked.Value ? VoiceTemplate.RU_Rita : VoiceTemplate.US_Betty;
+                    currentProfile.Monitoring = cmb_Monitoring.Text;
 
                     Settings.Save();
                 }

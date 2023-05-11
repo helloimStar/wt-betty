@@ -21,6 +21,7 @@ namespace wt_betty.Entities
         public bool EnableOverSpeed { get; set; }
         public int OverSpeed { get; set; }
         public VoiceTemplate Voice { get; set; }
+        public string Monitoring { get; set; }
         
         public AircraftProfile()
         {
