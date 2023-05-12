@@ -35,6 +35,8 @@ namespace wt_betty
         FlowDocument myFlowDoc = new FlowDocument();
         Paragraph par = new Paragraph();
 
+        bool outOfGame = true;
+
         Queue<KeyValuePair<DateTime, int>> FuelTimeMonitor = new Queue<KeyValuePair<DateTime, int>>();
 
         private ConnectionManager m_ConnectionManager = new ConnectionManager();
@@ -129,13 +131,19 @@ namespace wt_betty
 
                 string monitorMessage = "";
 
+                if (currentAircraft == null || currentAircraft == "dummy_plane")
+                {
+                    outOfGame = true;
+                }
+                else if (myState.throttle_1 != "0")
+                {
+                    outOfGame = false;
+                }
 
-                if (currentAircraft != null)
+                if (currentAircraft != null && !outOfGame)
                 {
                     var currentProfile = Settings.Profiles.ContainsKey(currentAircraft) ? Settings.Profiles[currentAircraft] : Settings.Default;
                     CurrentProfile = currentProfile;
-
-
 
 
                     decimal G = Convert.ToDecimal(myState.Ny, culture);
