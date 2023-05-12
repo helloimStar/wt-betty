@@ -36,7 +36,6 @@ namespace wt_betty
         Paragraph par = new Paragraph();
 
         int previousGearState = 0;
-
         bool outOfGame = true;
 
         Queue<KeyValuePair<DateTime, int>> FuelTimeMonitor = new Queue<KeyValuePair<DateTime, int>>();
@@ -136,6 +135,7 @@ namespace wt_betty
                 if (currentAircraft == null || currentAircraft == "dummy_plane")
                 {
                     outOfGame = true;
+                    VoiceProcessor.Stop();
                 }
                 else if (myState.throttle_1 != "0")
                 {
@@ -282,7 +282,6 @@ namespace wt_betty
                     //GEAR UP/DOWN
                     if (currentProfile.EnableGear == true)
                     {
-                        System.Diagnostics.Debug.WriteLine(gear);
                         bool gearUp = (gear >= previousGearState && gear != 0) && IAS > currentProfile.GearUp;
                         VoiceProcessor.GearUp(gearUp);
 
