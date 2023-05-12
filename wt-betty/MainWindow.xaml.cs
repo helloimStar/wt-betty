@@ -280,7 +280,7 @@ namespace wt_betty
                     //GEAR UP/DOWN
                     if (currentProfile.EnableGear == true)
                     {
-                        bool gearUp = gear == 100 && IAS > currentProfile.GearUp && myIndicator.gears_lamp == "0";
+                        bool gearUp = gear >= 50 && IAS > currentProfile.GearUp;
                         VoiceProcessor.GearUp(gearUp);
 
                         if ((AoA < 20 || Vspeed > -10) &&
@@ -289,7 +289,7 @@ namespace wt_betty
                             float Deg2Rad = (float)(Math.PI / 180f);
                             float driftSpeed = (float)(TAS * Math.Sin(Deg2Rad * (float)AoS));
 
-                            bool gearDown = gear == 0 && myIndicator.gears_lamp != "0" && Throttle < 20;
+                            bool gearDown = gear <= 50 && Throttle < 20;
                             VoiceProcessor.GearDown(gearDown);
                             //Sink rate warning: WT has a global vertical gear speed limit of 10m/s
                             bool sinkRate = !gearDown && (Vspeed < -8 && Throttle < 60);
