@@ -35,6 +35,8 @@ namespace wt_betty
         FlowDocument myFlowDoc = new FlowDocument();
         Paragraph par = new Paragraph();
 
+        int previousGearState = 0;
+
         bool outOfGame = true;
 
         Queue<KeyValuePair<DateTime, int>> FuelTimeMonitor = new Queue<KeyValuePair<DateTime, int>>();
@@ -280,7 +282,8 @@ namespace wt_betty
                     //GEAR UP/DOWN
                     if (currentProfile.EnableGear == true)
                     {
-                        bool gearUp = gear >= 50 && IAS > currentProfile.GearUp;
+                        System.Diagnostics.Debug.WriteLine(gear);
+                        bool gearUp = (gear >= previousGearState && gear != 0) && IAS > currentProfile.GearUp;
                         VoiceProcessor.GearUp(gearUp);
 
                         if ((AoA < 20 || Vspeed > -10) &&
@@ -289,7 +292,7 @@ namespace wt_betty
                             float Deg2Rad = (float)(Math.PI / 180f);
                             float driftSpeed = (float)(TAS * Math.Sin(Deg2Rad * (float)AoS));
 
-                            bool gearDown = gear <= 50 && Throttle < 20;
+                            bool gearDown = (gear <= previousGearState && gear != 100) && Throttle < 20;
                             VoiceProcessor.GearDown(gearDown);
                             //Sink rate warning: WT has a global vertical gear speed limit of 10m/s
                             bool sinkRate = !gearDown && (Vspeed < -8 && Throttle < 60);
@@ -312,6 +315,8 @@ namespace wt_betty
                             }
                             */
                         }
+
+                        previousGearState = gear;
                     }
                 }
             }
