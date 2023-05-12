@@ -36,8 +36,9 @@ namespace wt_betty
         Paragraph par = new Paragraph();
 
         int previousGearState = 0;
+        int previousFuelState = 0;
         bool outOfGame = true;
-
+        KeyValuePair<DateTime, int> MostRecentFuelVal = new KeyValuePair<DateTime, int>();
         Queue<KeyValuePair<DateTime, int>> FuelTimeMonitor = new Queue<KeyValuePair<DateTime, int>>();
 
         private ConnectionManager m_ConnectionManager = new ConnectionManager();
@@ -159,6 +160,17 @@ namespace wt_betty
                     int IAS = Convert.ToInt32(myState.IAS);
                     int flaps = Convert.ToInt32(myState.flaps);
 
+                    KeyValuePair<DateTime, int> newDataPoint = new KeyValuePair<DateTime, int>(DateTime.Now, (int)(Fuel));
+                    if (Fuel != previousFuelState)
+                    {
+                        FuelTimeMonitor.Enqueue(newDataPoint);
+                        MostRecentFuelVal = newDataPoint;
+                    }
+                    else 
+                    {
+                        newDataPoint = MostRecentFuelVal;
+                    }
+
                     //Console.WriteLine(myState.AoS);
                     //tbx_msgs.Text = myState.AoS;
                     decimal AoS = Convert.ToDecimal(myState.AoS, culture);
@@ -185,32 +197,38 @@ namespace wt_betty
                     }
                     else if (currentProfile.Monitoring == "Fuel Time")
                     {
-                        //int queueLength = 25;
+                        int queueLength = 5;
 
-                        //KeyValuePair<DateTime, int> newDataPoint = new KeyValuePair<DateTime, int>(DateTime.Now, (int)(Fuel / FuelFull));
-                        //FuelTimeMonitor.Enqueue(newDataPoint);
+                        if (FuelTimeMonitor.Count == queueLength)
+                        {
+                            KeyValuePair<DateTime, int> oldDataPoint = new KeyValuePair<DateTime, int>();
+                            if(Fuel != previousFuelState)
+                            {
+                                oldDataPoint = FuelTimeMonitor.Dequeue();
+                            }
+                            else
+                            {
+                                oldDataPoint = FuelTimeMonitor.Peek();
+                            }
 
-                        //if (FuelTimeMonitor.Count == queueLength)
-                        //{
-                        //    KeyValuePair<DateTime, int> oldDataPoint = FuelTimeMonitor.Dequeue();
-                        //    double timeElapsed = (newDataPoint.Key - oldDataPoint.Key).TotalSeconds;
-                        //    int fuelUsed = oldDataPoint.Value - newDataPoint.Value;
+                            double timeElapsed = (newDataPoint.Key - oldDataPoint.Key).TotalSeconds;
+                            int fuelUsed = oldDataPoint.Value - newDataPoint.Value;
 
-                        //    double secondsPerFuel = timeElapsed / fuelUsed;
-                        //    double fuelTimeRemaining = secondsPerFuel * newDataPoint.Value;
+                            double secondsPerFuel = timeElapsed / fuelUsed;
+                            double fuelTimeRemaining = secondsPerFuel * newDataPoint.Value;
 
-                        //    TimeSpan timeSpan = TimeSpan.FromSeconds(fuelTimeRemaining);
-                        //    string formattedTime = timeSpan.ToString("mm\\:ss");
-                        //    monitorMessage = formattedTime;
-                        //}
-                        //else
-                        //{
-                        //    monitorMessage = "...";
-                        //    while (FuelTimeMonitor.Count > queueLength)
-                        //    {
-                        //        FuelTimeMonitor.Dequeue();
-                        //    }
-                        //}
+                            TimeSpan timeSpan = TimeSpan.FromSeconds(fuelTimeRemaining);
+                            string formattedTime = timeSpan.ToString("mm\\:ss");
+                            monitorMessage = formattedTime;
+                        }
+                        else
+                        {
+                            monitorMessage = "...";
+                            while (FuelTimeMonitor.Count > queueLength)
+                            {
+                                FuelTimeMonitor.Dequeue();
+                            }
+                        }
 
                     }
                     else
@@ -316,6 +334,7 @@ namespace wt_betty
                         }
 
                         previousGearState = gear;
+                        previousFuelState = Fuel;
                     }
                 }
             }
