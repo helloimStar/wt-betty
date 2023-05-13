@@ -136,9 +136,8 @@ namespace wt_betty
                 if (currentAircraft == null || currentAircraft == "dummy_plane")
                 {
                     outOfGame = true;
-                    VoiceProcessor.Stop();
                 }
-                else if (myState.throttle_1 != "0")
+                else if (Convert.ToInt16(myState.throttle_1 ?? "0") != 0)
                 {
                     outOfGame = false;
                 }
@@ -147,7 +146,6 @@ namespace wt_betty
                 {
                     var currentProfile = Settings.Profiles.ContainsKey(currentAircraft) ? Settings.Profiles[currentAircraft] : Settings.Default;
                     CurrentProfile = currentProfile;
-
 
                     decimal G = Convert.ToDecimal(myState.Ny, culture);
                     decimal AoA = Convert.ToDecimal(myState.AoA, culture);
