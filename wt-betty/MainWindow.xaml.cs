@@ -171,72 +171,9 @@ namespace wt_betty
                         newDataPoint = MostRecentFuelVal;
                     }
 
-                    //Console.WriteLine(myState.AoS);
-                    //tbx_msgs.Text = myState.AoS;
                     decimal AoS = Convert.ToDecimal(myState.AoS, culture);
                     int TAS = Convert.ToInt32(myState.TAS, culture);
                     UpdateUIThreadSafe(() => label.Content = myIndicator.type);
-
-
-                    //Monitoring
-                    if (currentProfile.Monitoring == "")
-                    {
-                        monitorMessage = "";
-                    }
-                    else if (currentProfile.Monitoring == "G-Force")
-                    {
-                        monitorMessage = G.ToString();
-                    }
-                    else if (currentProfile.Monitoring == "AoA")
-                    {
-                        monitorMessage = AoA.ToString();
-                    }
-                    else if (currentProfile.Monitoring == "Speed")
-                    {
-                        monitorMessage = IAS.ToString();
-                    }
-                    else if (currentProfile.Monitoring == "Fuel Time")
-                    {
-                        int queueLength = 5;
-
-                        if (FuelTimeMonitor.Count == queueLength)
-                        {
-                            KeyValuePair<DateTime, int> oldDataPoint = new KeyValuePair<DateTime, int>();
-                            if(Fuel != previousFuelState)
-                            {
-                                oldDataPoint = FuelTimeMonitor.Dequeue();
-                            }
-                            else
-                            {
-                                oldDataPoint = FuelTimeMonitor.Peek();
-                            }
-
-                            double timeElapsed = (newDataPoint.Key - oldDataPoint.Key).TotalSeconds;
-                            int fuelUsed = oldDataPoint.Value - newDataPoint.Value;
-
-                            double secondsPerFuel = timeElapsed / fuelUsed;
-                            double fuelTimeRemaining = secondsPerFuel * newDataPoint.Value;
-
-                            TimeSpan timeSpan = TimeSpan.FromSeconds(fuelTimeRemaining);
-                            string formattedTime = timeSpan.ToString("mm\\:ss");
-                            monitorMessage = formattedTime;
-                        }
-                        else
-                        {
-                            monitorMessage = "...";
-                            while (FuelTimeMonitor.Count > queueLength)
-                            {
-                                FuelTimeMonitor.Dequeue();
-                            }
-                        }
-
-                    }
-                    else
-                    {
-                        monitorMessage = "hmmmmmmm";
-                    }
-
-                    UpdateUIThreadSafe(() => label_monitoring.Content = monitorMessage);
 
 
                     //BINGO FUEL
@@ -334,8 +271,70 @@ namespace wt_betty
                         }
 
                         previousGearState = gear;
-                        previousFuelState = Fuel;
                     }
+
+
+                    //Monitoring
+                    if (currentProfile.Monitoring == "")
+                    {
+                        monitorMessage = "";
+                    }
+                    else if (currentProfile.Monitoring == "G-Force")
+                    {
+                        monitorMessage = G.ToString();
+                    }
+                    else if (currentProfile.Monitoring == "AoA")
+                    {
+                        monitorMessage = AoA.ToString();
+                    }
+                    else if (currentProfile.Monitoring == "Speed")
+                    {
+                        monitorMessage = IAS.ToString();
+                    }
+                    else if (currentProfile.Monitoring == "Fuel Time")
+                    {
+                        int queueLength = 5;
+
+                        if (FuelTimeMonitor.Count == queueLength)
+                        {
+                            KeyValuePair<DateTime, int> oldDataPoint = new KeyValuePair<DateTime, int>();
+                            if (Fuel != previousFuelState)
+                            {
+                                oldDataPoint = FuelTimeMonitor.Dequeue();
+                            }
+                            else
+                            {
+                                oldDataPoint = FuelTimeMonitor.Peek();
+                            }
+
+                            double timeElapsed = (newDataPoint.Key - oldDataPoint.Key).TotalSeconds;
+                            int fuelUsed = oldDataPoint.Value - newDataPoint.Value;
+
+                            double secondsPerFuel = timeElapsed / fuelUsed;
+                            double fuelTimeRemaining = secondsPerFuel * newDataPoint.Value;
+
+                            TimeSpan timeSpan = TimeSpan.FromSeconds(fuelTimeRemaining);
+                            string formattedTime = timeSpan.ToString("mm\\:ss");
+                            monitorMessage = formattedTime;
+                        }
+                        else
+                        {
+                            monitorMessage = "...";
+                            while (FuelTimeMonitor.Count > queueLength)
+                            {
+                                FuelTimeMonitor.Dequeue();
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        monitorMessage = "hmmmmmmm";
+                    }
+
+                    UpdateUIThreadSafe(() => label_monitoring.Content = monitorMessage);
+
+                    previousFuelState = Fuel;
                 }
             }
             catch (Exception ex)
